@@ -1,0 +1,195 @@
+/* ── Google Fonts (must be first @import) ─────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@import "tailwindcss";
+
+/* ── CSS Custom Properties (Design Tokens) ───────────────── */
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    /* Primary = Teal */
+    --primary: 173 80% 36%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Emerald accent */
+    --secondary: 160 84% 39%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 173 80% 36%;
+
+    --radius: 0.75rem;
+  }
+}
+
+/* ── Global Resets & Base Styles ─────────────────────────── */
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+    box-sizing: border-box;
+  }
+
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: hsl(210 40% 98%);
+    color: hsl(var(--foreground));
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-weight: 700;
+    line-height: 1.2;
+    color: hsl(222 47% 11%);
+  }
+}
+
+/* ── Utility Classes ─────────────────────────────────────── */
+@layer utilities {
+
+  /* Gradient backgrounds */
+  .gradient-primary {
+    background: linear-gradient(135deg, #0d9488 0%, #10b981 100%);
+  }
+
+  .gradient-primary-subtle {
+    background: linear-gradient(135deg, #ccfbf1 0%, #d1fae5 100%);
+  }
+
+  /* Card styles */
+  .card-base {
+    background: white;
+    border-radius: 1rem;
+    border: 1px solid hsl(214.3 31.8% 91.4%);
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.07), 0 1px 2px -1px rgb(0 0 0 / 0.07);
+  }
+
+  .card-hover {
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+
+  .card-hover:hover {
+    box-shadow: 0 8px 24px 0 rgb(0 0 0 / 0.10);
+    transform: translateY(-1px);
+  }
+
+  /* Sidebar */
+  .sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.625rem 1rem;
+    border-radius: 0.625rem;
+    color: hsl(215 16% 46%);
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: background-color 0.15s, color 0.15s;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .sidebar-link:hover {
+    background-color: hsl(173 80% 36% / 0.08);
+    color: hsl(173 80% 36%);
+  }
+
+  .sidebar-link.active {
+    background: linear-gradient(135deg, hsl(173 80% 36% / 0.12), hsl(160 84% 39% / 0.12));
+    color: hsl(173 80% 36%);
+    font-weight: 600;
+  }
+
+  /* Input focus ring */
+  .input-ring {
+    outline: none;
+    border: 1.5px solid hsl(214.3 31.8% 91.4%);
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+
+  .input-ring:focus {
+    border-color: hsl(173 80% 36%);
+    box-shadow: 0 0 0 3px hsl(173 80% 36% / 0.12);
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #f1f5f9;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+}
+
+/* ── Status Badge Colors ─────────────────────────────────── */
+.badge-selected {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.badge-rejected {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.badge-pending {
+  background: #fef9c3;
+  color: #713f12;
+}
+
+.badge-absent {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.badge-upcoming {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.badge-active {
+  background: #ecfdf5;
+  color: #065f46;
+}
+
+.badge-completed {
+  background: #f3f4f6;
+  color: #374151;
+}
