@@ -1,5 +1,6 @@
 // ============================================================
 // CPMS – Prisma Schema (PostgreSQL Version for Supabase)
+// Clean Version (No directUrl, Direct DB Connection)
 // ============================================================
 
 generator client {
@@ -7,13 +8,12 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // ─────────────────────────────────────────────
-// ENUMS  (PostgreSQL native enum types)
+// ENUMS
 // ─────────────────────────────────────────────
 
 enum Role {
@@ -86,15 +86,16 @@ enum NotificationType {
 }
 
 // ─────────────────────────────────────────────
-// Model 1: User  (Auth entity)
+// Model 1: User
 // ─────────────────────────────────────────────
+
 model User {
-  id           String    @id @default(cuid())
-  email        String    @unique
-  password     String
-  role         Role      @default(STUDENT)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id            String         @id @default(cuid())
+  email         String         @unique
+  password      String
+  role          Role           @default(STUDENT)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
   student       Student?
   notifications Notification[]
@@ -103,33 +104,34 @@ model User {
 // ─────────────────────────────────────────────
 // Model 2: Student
 // ─────────────────────────────────────────────
+
 model Student {
-  id                String    @id @default(cuid())
-  userId            String    @unique
-  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                 String              @id @default(cuid())
+  userId             String              @unique
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  firstName         String
-  lastName          String
-  phone             String?
-  gender            String?
-  enrollmentNumber  String    @unique
-  branch            Branch
+  firstName          String
+  lastName           String
+  phone              String?
+  gender             String?
+  enrollmentNumber   String              @unique
+  branch             Branch
 
-  tenth_percent     Float
-  twelfth_percent   Float
-  cgpa              Float
+  tenth_percent      Float
+  twelfth_percent    Float
+  cgpa               Float
 
-  activeBacklogs    Boolean   @default(false)
-  totalBacklogs     Int       @default(0)
+  activeBacklogs     Boolean             @default(false)
+  totalBacklogs      Int                 @default(0)
 
-  resumeUrl         String?
-  profilePhotoUrl   String?
+  resumeUrl          String?
+  profilePhotoUrl    String?
 
-  hasInternship     Boolean   @default(false)
-  internshipDetails String?
+  hasInternship      Boolean             @default(false)
+  internshipDetails  String?
 
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
 
   certificates        Certificate[]
   driveRegistrations  DriveRegistration[]
@@ -141,23 +143,25 @@ model Student {
 // ─────────────────────────────────────────────
 // Model 3: Certificate
 // ─────────────────────────────────────────────
+
 model Certificate {
-  id          String          @id @default(cuid())
-  studentId   String
-  student     Student         @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  id         String          @id @default(cuid())
+  studentId  String
+  student    Student         @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
-  title       String
-  fileUrl     String
-  type        CertificateType
+  title      String
+  fileUrl    String
+  type       CertificateType
 
-  uploadedAt  DateTime        @default(now())
+  uploadedAt DateTime        @default(now())
 }
 
 // ─────────────────────────────────────────────
 // Model 4: Company
 // ─────────────────────────────────────────────
+
 model Company {
-  id                  String        @id @default(cuid())
+  id                  String              @id @default(cuid())
   name                String
   jobRole             String
   ctc                 Float
@@ -165,16 +169,14 @@ model Company {
   eligibilityCGPA     Float
   eligibilityPercent  Float
 
-  // PostgreSQL native array — replaces the comma-separated String workaround
   allowedBranches     Branch[]
 
   driveDate           DateTime
   description         String?
   noticePdfUrl        String?
 
-  status              CompanyStatus @default(UPCOMING)
-
-  createdAt           DateTime      @default(now())
+  status              CompanyStatus       @default(UPCOMING)
+  createdAt           DateTime            @default(now())
 
   driveRegistrations  DriveRegistration[]
   selectionRounds     SelectionRound[]
@@ -183,15 +185,16 @@ model Company {
 // ─────────────────────────────────────────────
 // Model 5: DriveRegistration
 // ─────────────────────────────────────────────
-model DriveRegistration {
-  id            String    @id @default(cuid())
-  companyId     String
-  company       Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  studentId     String
-  student       Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
-  registeredAt  DateTime  @default(now())
-  isEligible    Boolean   @default(false)
+model DriveRegistration {
+  id           String    @id @default(cuid())
+  companyId    String
+  company      Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  studentId    String
+  student      Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  registeredAt DateTime  @default(now())
+  isEligible   Boolean   @default(false)
 
   @@unique([companyId, studentId])
 }
@@ -199,17 +202,17 @@ model DriveRegistration {
 // ─────────────────────────────────────────────
 // Model 6: SelectionRound
 // ─────────────────────────────────────────────
+
 model SelectionRound {
-  id             String      @id @default(cuid())
-  companyId      String
-  company        Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  id            String        @id @default(cuid())
+  companyId     String
+  company       Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
-  roundNumber    Int
-  roundName      RoundName
+  roundNumber   Int
+  roundName     RoundName
+  scheduledDate DateTime?
 
-  scheduledDate  DateTime?
-
-  roundResults   RoundResult[]
+  roundResults  RoundResult[]
 
   @@unique([companyId, roundNumber])
 }
@@ -217,17 +220,17 @@ model SelectionRound {
 // ─────────────────────────────────────────────
 // Model 7: RoundResult
 // ─────────────────────────────────────────────
+
 model RoundResult {
-  id          String            @id @default(cuid())
-  roundId     String
-  round       SelectionRound    @relation(fields: [roundId], references: [id], onDelete: Cascade)
-  studentId   String
-  student     Student           @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  id         String          @id @default(cuid())
+  roundId    String
+  round      SelectionRound  @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  studentId  String
+  student    Student         @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
-  status      ResultStatus      @default(PENDING)
-  remarks     String?
-
-  updatedAt   DateTime          @updatedAt
+  status     ResultStatus    @default(PENDING)
+  remarks    String?
+  updatedAt  DateTime        @updatedAt
 
   @@unique([roundId, studentId])
 }
@@ -235,8 +238,9 @@ model RoundResult {
 // ─────────────────────────────────────────────
 // Model 8: TrainingSession
 // ─────────────────────────────────────────────
+
 model TrainingSession {
-  id           String      @id @default(cuid())
+  id           String              @id @default(cuid())
   title        String
   type         SessionType
   conductedBy  String
@@ -249,15 +253,16 @@ model TrainingSession {
 // ─────────────────────────────────────────────
 // Model 9: TrainingAttendance
 // ─────────────────────────────────────────────
-model TrainingAttendance {
-  id          String           @id @default(cuid())
-  sessionId   String
-  session     TrainingSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  studentId   String
-  student     Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
-  status      AttendanceStatus @default(ABSENT)
-  markedAt    DateTime         @default(now())
+model TrainingAttendance {
+  id         String           @id @default(cuid())
+  sessionId  String
+  session    TrainingSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  studentId  String
+  student    Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  status     AttendanceStatus @default(ABSENT)
+  markedAt   DateTime         @default(now())
 
   @@unique([sessionId, studentId])
 }
@@ -265,15 +270,15 @@ model TrainingAttendance {
 // ─────────────────────────────────────────────
 // Model 10: MockTest
 // ─────────────────────────────────────────────
+
 model MockTest {
-  id          String       @id @default(cuid())
+  id          String            @id @default(cuid())
   title       String
   type        MockTestType
   duration    Int
   totalMarks  Int
-
-  isActive    Boolean      @default(false)
-  createdAt   DateTime     @default(now())
+  isActive    Boolean           @default(false)
+  createdAt   DateTime          @default(now())
 
   questions   MockTestQuestion[]
   results     MockTestResult[]
@@ -282,6 +287,7 @@ model MockTest {
 // ─────────────────────────────────────────────
 // Model 11: MockTestQuestion
 // ─────────────────────────────────────────────
+
 model MockTestQuestion {
   id            String    @id @default(cuid())
   testId        String
@@ -300,6 +306,7 @@ model MockTestQuestion {
 // ─────────────────────────────────────────────
 // Model 12: MockTestResult
 // ─────────────────────────────────────────────
+
 model MockTestResult {
   id             String    @id @default(cuid())
   testId         String
@@ -312,7 +319,6 @@ model MockTestResult {
   timeTaken      Int
   correctAnswers Int
   wrongAnswers   Int
-
   attemptedAt    DateTime  @default(now())
 
   @@unique([testId, studentId])
@@ -321,15 +327,16 @@ model MockTestResult {
 // ─────────────────────────────────────────────
 // Model 13: Notification
 // ─────────────────────────────────────────────
+
 model Notification {
-  id            String           @id @default(cuid())
-  userId        String
-  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  title         String
-  message       String
-  type          NotificationType @default(INFO)
+  title     String
+  message   String
+  type      NotificationType @default(INFO)
 
-  isRead        Boolean          @default(false)
-  createdAt     DateTime         @default(now())
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
 }
