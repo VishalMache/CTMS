@@ -35,6 +35,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 
+// ── Serve local uploads (fallback when Cloudinary is not configured) ──
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+
 // ── Health check ────────────────────────────────────────────
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', message: 'CPMS API is running 🚀' });

@@ -67,17 +67,26 @@ const updateProfile = async (req, res) => {
     return res.json({ success: true, message: 'Profile updated successfully', student });
 };
 
+// ── Helper: resolve uploaded file URL (Cloudinary or local) ──
+const getFileUrl = (file, subfolder) => {
+    // Cloudinary sets req.file.path to a full https URL
+    if (file.path && file.path.startsWith('http')) {
+        return file.path;
+    }
+    // Local disk storage: build a relative URL the client can fetch
+    return `/uploads/${subfolder}/${file.filename}`;
+};
+
 // ────────────────────────────────────────────────────────────
 // POST /api/students/resume  (protected: STUDENT)
-// Multer + Cloudinary handles the upload; we just save the URL
+// Multer + Cloudinary / local handles the upload; we save the URL
 // ────────────────────────────────────────────────────────────
 const uploadResume = async (req, res) => {
     if (!req.file) {
         return res.status(400).json({ success: false, message: 'No file uploaded' });
     }
 
-    // Cloudinary URL is on req.file.path
-    const resumeUrl = req.file.path;
+    const resumeUrl = getFileUrl(req.file, 'resumes');
 
     const student = await prisma.student.update({
         where: { userId: req.user.userId },
@@ -100,7 +109,7 @@ const uploadPhoto = async (req, res) => {
         return res.status(400).json({ success: false, message: 'No file uploaded' });
     }
 
-    const profilePhotoUrl = req.file.path;
+    const profilePhotoUrl = getFileUrl(req.file, 'photos');
 
     const student = await prisma.student.update({
         where: { userId: req.user.userId },

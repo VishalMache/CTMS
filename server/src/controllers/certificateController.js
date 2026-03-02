@@ -66,7 +66,10 @@ const addCertificate = async (req, res) => {
     }
 
     const { title, type } = parsed.data;
-    const fileUrl = req.file.path; // Cloudinary secure URL
+    // Cloudinary sets req.file.path to a full https URL; local disk storage doesn't
+    const fileUrl = (req.file.path && req.file.path.startsWith('http'))
+        ? req.file.path
+        : `/uploads/certificates/${req.file.filename}`;
 
     const certificate = await prisma.certificate.create({
         data: { studentId, title, type, fileUrl },
