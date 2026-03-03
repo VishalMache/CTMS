@@ -36,6 +36,7 @@ const AdminTraining = lazy(() => import('@/pages/admin/AdminTraining'))
 const AdminMockTests = lazy(() => import('@/pages/admin/AdminMockTests'))
 const AdminReports = lazy(() => import('@/pages/admin/AdminReports'))
 const AdminNotifs = lazy(() => import('@/pages/admin/AdminNotifications'))
+const AdminProfile = lazy(() => import('@/pages/admin/AdminProfile'))
 
 // ── Page-level loading fallback ──────────────────────────────
 const PageLoader = () => (
@@ -80,6 +81,7 @@ const App = () => (
           <Route path="/admin/mock-tests" element={<AdminMockTests />} />
           <Route path="/admin/reports" element={<AdminReports />} />
           <Route path="/admin/notifications" element={<AdminNotifs />} />
+          <Route path="/admin/profile" element={<AdminProfile />} />
         </Route>
 
         {/* 404 – catch-all */}

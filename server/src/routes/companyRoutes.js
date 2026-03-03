@@ -15,6 +15,7 @@ const {
     updateCompany,
     deleteCompany,
     getAdminDashboardStats,
+    getStudentApplications,
 } = require('../controllers/companyController');
 
 // ── All routes below require authentication ─────────────────
@@ -22,6 +23,9 @@ router.use(protect);
 
 // Admin dashboard stats (Admin Only)
 router.get('/stats/dashboard', requireRole('TPO_ADMIN'), getAdminDashboardStats);
+
+// Admin: view all student-company applications
+router.get('/applications/all', requireRole('TPO_ADMIN'), getStudentApplications);
 
 // List all companies (Students + Admins)
 router.get('/', getCompanies);

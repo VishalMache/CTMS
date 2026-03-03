@@ -5,8 +5,8 @@
 import React, { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/shared/DashboardLayout'
 import { Card, Button, Badge, Spinner, Dialog, DialogContent } from '@/components/ui'
-import { useTests, useTakeTest, useSubmitTest } from '@/hooks/useMockTest'
-import { FileText, Clock, Award, CheckCircle2, ChevronRight, ChevronLeft } from 'lucide-react'
+import { useTests, useTakeTest, useSubmitTest, useLeaderboard } from '@/hooks/useMockTest'
+import { FileText, Clock, Award, CheckCircle2, ChevronRight, ChevronLeft, Trophy } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 // ── Quiz Taking Interface ───────────────────────────────────
@@ -14,14 +14,13 @@ const QuizModal = ({ testId, open, setOpen }) => {
   if (!testId || !open) return null;
 
   const { data, isLoading } = useTakeTest(testId)
-  const { mutate: submit, isPending } = useSubmitTest()
+  const { mutate: submit, isPending, isError, error } = useSubmitTest()
 
   const test = data?.test
 
   const [currentIdx, setCurrentIdx] = useState(0)
-  const [answers, setAnswers] = useState({}) // { questionId: 'A' | 'B' | 'C' | 'D' }
+  const [answers, setAnswers] = useState({})
 
-  // Prevent accidental closure
   useEffect(() => {
     const handleBeforeUnload = (e) => {
       if (open) e.preventDefault();
@@ -61,7 +60,13 @@ const QuizModal = ({ testId, open, setOpen }) => {
     if (window.confirm('Are you sure you want to submit? You cannot change answers after submitting.')) {
       submit({ testId, answers }, {
         onSuccess: () => {
+          alert('Assessment submitted successfully!')
           setOpen(false)
+        },
+        onError: (err) => {
+          const msg = err?.response?.data?.message || err?.message || 'Failed to submit. Please try again.'
+          alert('Submission Error: ' + msg)
+          console.error('Mock test submit error:', err)
         }
       })
     }
@@ -72,8 +77,6 @@ const QuizModal = ({ testId, open, setOpen }) => {
       if (!val && window.confirm('Discard progress and exit?')) setOpen(false)
     }}>
       <DialogContent className="max-w-3xl p-0 overflow-hidden flex flex-col max-h-[90vh]">
-
-        {/* Header Navbar */}
         <div className="p-4 bg-slate-900 text-white flex justify-between items-center shrink-0">
           <div>
             <h2 className="font-bold text-lg">{test.title}</h2>
@@ -81,7 +84,6 @@ const QuizModal = ({ testId, open, setOpen }) => {
           </div>
         </div>
 
-        {/* Progress Bar */}
         <div className="h-1.5 w-full bg-slate-100 shrink-0">
           <div
             className="h-full bg-teal-500 transition-all duration-300"
@@ -89,10 +91,8 @@ const QuizModal = ({ testId, open, setOpen }) => {
           />
         </div>
 
-        {/* Question Body */}
         <div className="flex-1 overflow-y-auto p-6 bg-slate-50">
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-
             <div className="flex justify-between items-start mb-6 pb-4 border-b border-slate-100">
               <Badge variant="outline" className="text-slate-500">Question {currentIdx + 1} of {totalQs}</Badge>
               <span className="text-sm font-bold text-slate-400">{question.marks} Marks</span>
@@ -130,11 +130,9 @@ const QuizModal = ({ testId, open, setOpen }) => {
                 )
               })}
             </div>
-
           </div>
         </div>
 
-        {/* Footer Controls */}
         <div className="p-4 bg-white border-t border-slate-200 flex justify-between items-center shrink-0">
           <Button
             variant="outline"
@@ -162,9 +160,67 @@ const QuizModal = ({ testId, open, setOpen }) => {
             </Button>
           )}
         </div>
-
       </DialogContent>
     </Dialog>
+  )
+}
+
+// ── Leaderboard Section ─────────────────────────────────────
+const LeaderboardSection = () => {
+  const { data, isLoading } = useLeaderboard()
+  if (isLoading) return <div className="flex justify-center p-6"><Spinner size={24} /></div>
+
+  const results = data?.results || []
+  if (results.length === 0) return null
+
+  const medals = ['🥇', '🥈', '🥉']
+
+  return (
+    <Card className="mt-10 overflow-hidden border-slate-200">
+      <div className="p-6 border-b border-slate-100 bg-gradient-to-r from-amber-50 to-white">
+        <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+          <Trophy size={20} className="text-amber-500" /> Mock Test Leaderboard
+        </h3>
+        <p className="text-sm text-slate-500 mt-1">Top performers across all assessments</p>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs uppercase">
+              <th className="py-3 px-4 font-semibold w-16">Rank</th>
+              <th className="py-3 px-4 font-semibold">Student</th>
+              <th className="py-3 px-4 font-semibold">Branch</th>
+              <th className="py-3 px-4 font-semibold">Test</th>
+              <th className="py-3 px-4 font-semibold text-right">Score</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100 bg-white">
+            {results.map((r, idx) => (
+              <tr key={r.id} className={cn("hover:bg-slate-50 transition-colors", idx < 3 && "bg-amber-50/30")}>
+                <td className="py-3 px-4 text-center">
+                  <span className="text-lg">{idx < 3 ? medals[idx] : idx + 1}</span>
+                </td>
+                <td className="py-3 px-4">
+                  <p className="font-bold text-sm text-slate-800">{r.student.firstName} {r.student.lastName}</p>
+                  <p className="text-xs text-slate-500">{r.student.enrollmentNumber}</p>
+                </td>
+                <td className="py-3 px-4">
+                  <Badge variant="outline" className="text-xs">{r.student.branch}</Badge>
+                </td>
+                <td className="py-3 px-4">
+                  <p className="text-sm text-slate-700">{r.test.title}</p>
+                  <p className="text-xs text-slate-400">{r.test.type}</p>
+                </td>
+                <td className="py-3 px-4 text-right">
+                  <span className="text-lg font-black text-teal-700">{r.score}</span>
+                  <span className="text-sm font-medium text-teal-500">/{r.test.totalMarks}</span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Card>
   )
 }
 
@@ -204,7 +260,6 @@ const StudentMockTests = () => {
                 "flex flex-col relative overflow-hidden transition-all border-slate-200",
                 isCompleted ? "opacity-90 bg-slate-50 shadow-none" : "hover:shadow-md bg-white"
               )}>
-                {/* Visual Badge if Done */}
                 {isCompleted && (
                   <div className="absolute top-0 right-0 p-1 bg-teal-500 text-white text-[10px] uppercase font-bold tracking-wider px-3 rounded-bl-lg shadow-sm z-10 flex gap-1 items-center">
                     <CheckCircle2 size={12} /> Completed
@@ -254,6 +309,9 @@ const StudentMockTests = () => {
           })}
         </div>
       )}
+
+      {/* Leaderboard */}
+      <LeaderboardSection />
 
     </DashboardLayout>
   )

@@ -141,9 +141,13 @@ const StudentResume = () => {
     )
   }
 
+  const studentProfile = profile || {}
+
   const handleResumeChange = (e) => {
     const file = e.target.files?.[0]
     if (!file) return
+    // Reset input so user can re-select the same file or pick a new one
+    e.target.value = ''
     uploadResume(file)
   }
 
@@ -168,11 +172,11 @@ const StudentResume = () => {
               <div>
                 <h3 className="text-base font-bold text-slate-800">Primary Resume</h3>
                 <p className="text-sm text-slate-500 mt-1 max-w-sm">
-                  {profile.resumeUrl
+                  {studentProfile.resumeUrl
                     ? "Your latest resume is uploaded. Ensure it's tailored for your target roles."
                     : "No resume found. Upload a PDF version of your resume to apply for drives."}
                 </p>
-                {profile.resumeUrl && (
+                {studentProfile.resumeUrl && (
                   <Badge variant="outline" className="mt-3 border-emerald-200 text-emerald-700 bg-emerald-50 text-xs">
                     Active • Ready for applications
                   </Badge>
@@ -181,9 +185,9 @@ const StudentResume = () => {
             </div>
 
             <div className="flex w-full md:w-auto items-center gap-3 shrink-0">
-              {profile.resumeUrl && (
+              {studentProfile.resumeUrl && (
                 <Button variant="outline" asChild className="w-full md:w-auto">
-                  <a href={profile.resumeUrl} target="_blank" rel="noopener noreferrer" className="gap-2">
+                  <a href={studentProfile.resumeUrl} target="_blank" rel="noopener noreferrer" className="gap-2">
                     <ExternalLink size={16} /> View
                   </a>
                 </Button>
@@ -206,7 +210,7 @@ const StudentResume = () => {
                 ) : (
                   <UploadCloud size={16} />
                 )}
-                {profile.resumeUrl ? 'Replace Resume' : 'Upload Resume'}
+                {studentProfile.resumeUrl ? 'Replace Resume' : 'Upload Resume'}
               </Button>
             </div>
           </Card>

@@ -33,3 +33,8 @@ export const deleteCompany = async (id) => {
     const res = await api.delete(`/companies/${id}`)
     return res.data
 }
+
+export const fetchStudentApplications = async () => {
+    const res = await api.get('/companies/applications/all')
+    return res.data
+}

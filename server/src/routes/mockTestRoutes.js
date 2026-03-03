@@ -17,13 +17,15 @@ const {
     deleteQuestion,
     takeTest,
     submitTest,
-    getTestResults
+    getTestResults,
+    getLeaderboard
 } = require('../controllers/mockTestController');
 
 router.use(protect); // All protected
 
 // ── Shared ──────────────────────────────────────────────────
 router.get('/', getTests);
+router.get('/leaderboard', getLeaderboard);
 
 // ── Student Only ────────────────────────────────────────────
 router.get('/:id/take', requireRole('STUDENT'), takeTest);

@@ -4,13 +4,13 @@
 
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, Edit2, Trash2, Calendar, Briefcase, GraduationCap, Building2, ListChecks } from 'lucide-react'
+import { Plus, Edit2, Trash2, Calendar, Briefcase, GraduationCap, Building2, ListChecks, Users } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import DashboardLayout from '@/components/shared/DashboardLayout'
 import { Card, Button, Input, Label, Badge, Spinner, Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui'
-import { useCompanies, useCreateCompany, useUpdateCompany, useDeleteCompany } from '@/hooks/useCompany'
+import { useCompanies, useCreateCompany, useUpdateCompany, useDeleteCompany, useStudentApplications } from '@/hooks/useCompany'
 
 // ── Strict UI Validation Schema matching Backend ────────────
 const companySchema = z.object({
@@ -37,7 +37,10 @@ const CompanyModal = ({ open, setOpen, initialData }) => {
         resolver: zodResolver(companySchema),
         defaultValues: initialData ? {
             ...initialData,
-            driveDate: new Date(initialData.driveDate).toISOString().split('T')[0] // format for input type="date"
+            driveDate: new Date(initialData.driveDate).toISOString().split('T')[0],
+            allowedBranches: Array.isArray(initialData.allowedBranches)
+                ? initialData.allowedBranches.join(',')
+                : initialData.allowedBranches
         } : {
             status: 'UPCOMING',
             eligibilityCGPA: 6.0,
@@ -51,7 +54,10 @@ const CompanyModal = ({ open, setOpen, initialData }) => {
         if (open) {
             reset(initialData ? {
                 ...initialData,
-                driveDate: new Date(initialData.driveDate).toISOString().split('T')[0]
+                driveDate: new Date(initialData.driveDate).toISOString().split('T')[0],
+                allowedBranches: Array.isArray(initialData.allowedBranches)
+                    ? initialData.allowedBranches.join(',')
+                    : initialData.allowedBranches
             } : {
                 status: 'UPCOMING',
                 eligibilityCGPA: 6.0,
@@ -182,7 +188,10 @@ const CompanyModal = ({ open, setOpen, initialData }) => {
 // ── Main Listing Component ──────────────────────────────────
 const CompanyManagement = () => {
     const { data: companies, isLoading } = useCompanies()
+    const { data: applicationsData, isLoading: loadingApps } = useStudentApplications()
     const { mutate: deleteCompany, isPending: isDeleting } = useDeleteCompany()
+
+    const applications = applicationsData?.applications || []
 
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [selectedCompany, setSelectedCompany] = useState(null)
@@ -265,8 +274,8 @@ const CompanyManagement = () => {
                                                 </div>
                                                 <div>
                                                     <p className="font-bold text-slate-800">{company.name}</p>
-                                                    <p className="text-xs text-slate-500 truncate max-w-[150px]" title={company.allowedBranches}>
-                                                        {company.allowedBranches}
+                                                    <p className="text-xs text-slate-500 truncate max-w-[150px]" title={Array.isArray(company.allowedBranches) ? company.allowedBranches.join(', ') : company.allowedBranches}>
+                                                        {Array.isArray(company.allowedBranches) ? company.allowedBranches.join(', ') : company.allowedBranches}
                                                     </p>
                                                 </div>
                                             </div>
@@ -326,6 +335,73 @@ const CompanyManagement = () => {
                     </div>
                 </Card>
             )}
+
+            {/* ── Student Applications Section ──────────────── */}
+            <div className="mt-10">
+                <div className="flex items-center gap-2 mb-4">
+                    <Users size={20} className="text-teal-500" />
+                    <h2 className="text-xl font-bold text-slate-800">Student Applications</h2>
+                    <Badge variant="outline" className="ml-2">{applications.length} Total</Badge>
+                </div>
+
+                {loadingApps ? (
+                    <div className="flex justify-center p-8"><Spinner size={24} /></div>
+                ) : applications.length === 0 ? (
+                    <Card className="py-10 text-center border-dashed bg-slate-50/50">
+                        <p className="text-slate-500">No students have applied to any companies yet.</p>
+                    </Card>
+                ) : (
+                    <Card className="overflow-hidden border-slate-200">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="bg-slate-50 border-b border-slate-200">
+                                        <th className="py-4 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Student</th>
+                                        <th className="py-4 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Branch & CGPA</th>
+                                        <th className="py-4 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Company</th>
+                                        <th className="py-4 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Role & CTC</th>
+                                        <th className="py-4 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Applied On</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100 bg-white">
+                                    {applications.map((app) => (
+                                        <tr key={app.id} className="hover:bg-slate-50/50 transition-colors">
+                                            <td className="py-4 px-6">
+                                                <p className="font-bold text-sm text-slate-800">{app.student.firstName} {app.student.lastName}</p>
+                                                <p className="text-xs text-slate-500">{app.student.enrollmentNumber}</p>
+                                            </td>
+                                            <td className="py-4 px-6">
+                                                <div className="flex items-center gap-2">
+                                                    <Badge variant="outline" className="text-xs">{app.student.branch}</Badge>
+                                                    <span className="text-sm font-semibold text-slate-700">{app.student.cgpa}</span>
+                                                </div>
+                                            </td>
+                                            <td className="py-4 px-6">
+                                                <p className="font-semibold text-slate-700">{app.company.name}</p>
+                                                <Badge variant={
+                                                    app.company.status === 'UPCOMING' ? 'default' :
+                                                        app.company.status === 'ACTIVE' ? 'success' : 'secondary'
+                                                } className="text-[10px] mt-1">{app.company.status}</Badge>
+                                            </td>
+                                            <td className="py-4 px-6">
+                                                <p className="text-sm text-slate-700">{app.company.jobRole}</p>
+                                                <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs mt-1">
+                                                    {app.company.ctc} LPA
+                                                </Badge>
+                                            </td>
+                                            <td className="py-4 px-6 text-sm text-slate-500">
+                                                {new Date(app.registeredAt).toLocaleDateString('en-US', {
+                                                    month: 'short', day: 'numeric', year: 'numeric'
+                                                })}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </Card>
+                )}
+            </div>
 
         </DashboardLayout>
     )

@@ -2,15 +2,13 @@
 // CPMS – Training Controller (src/controllers/trainingController.js)
 // ============================================================
 
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../lib/prisma');
 const { z } = require('zod');
-
-const prisma = new PrismaClient();
 
 // ── Validation Schemas ──────────────────────────────────────
 const sessionSchema = z.object({
     title: z.string().min(1, 'Title is required'),
-    type: z.string().min(1, 'Type is required'), // e.g., 'WORKSHOP', 'SEMINAR', 'TECHNICAL'
+    type: z.enum(['TECHNICAL_LECTURE', 'MOCK_INTERVIEW', 'APTITUDE', 'HR_PREP']),
     conductedBy: z.string().min(1, 'Conductor name is required'),
     sessionDate: z.string().transform((str) => new Date(str)),
     description: z.string().optional()
@@ -222,7 +220,7 @@ const joinSession = async (req, res) => {
             data: {
                 sessionId: id,
                 studentId: studentId,
-                status: 'REGISTERED' // Default status before Admin marks PRESENT
+                status: 'ABSENT' // Default before Admin marks as PRESENT
             }
         });
 

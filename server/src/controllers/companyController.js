@@ -3,10 +3,8 @@
 // Handles: CRUD for companies + TPO Dashboard aggregations
 // ============================================================
 
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../lib/prisma');
 const { z } = require('zod');
-
-const prisma = new PrismaClient();
 
 // ── Zod: Create/Update Company Schema ────────────────────────
 const companySchema = z.object({
@@ -26,19 +24,29 @@ const companySchema = z.object({
 // POST /api/companies  (protected: TPO_ADMIN)
 // ────────────────────────────────────────────────────────────
 const createCompany = async (req, res) => {
-    const parsed = companySchema.safeParse(req.body);
-    if (!parsed.success) {
-        return res.status(400).json({
-            success: false,
-            message: 'Validation failed',
-            errors: parsed.error.flatten().fieldErrors,
-        });
+    try {
+        const parsed = companySchema.safeParse(req.body);
+        if (!parsed.success) {
+            return res.status(400).json({
+                success: false,
+                message: 'Validation failed',
+                errors: parsed.error.flatten().fieldErrors,
+            });
+        }
+
+        const data = { ...parsed.data, driveDate: new Date(parsed.data.driveDate) };
+
+        // Convert comma-separated branches string to array for PostgreSQL
+        if (typeof data.allowedBranches === 'string') {
+            data.allowedBranches = data.allowedBranches.split(',').map(b => b.trim()).filter(Boolean);
+        }
+
+        const company = await prisma.company.create({ data });
+        return res.status(201).json({ success: true, message: 'Company created successfully', company });
+    } catch (error) {
+        console.error('Error creating company:', error);
+        return res.status(500).json({ success: false, message: error.message || 'Server error' });
     }
-
-    const data = { ...parsed.data, driveDate: new Date(parsed.data.driveDate) };
-
-    const company = await prisma.company.create({ data });
-    return res.status(201).json({ success: true, message: 'Company created successfully', company });
 };
 
 // ────────────────────────────────────────────────────────────
@@ -100,6 +108,10 @@ const updateCompany = async (req, res) => {
 
     const data = { ...parsed.data };
     if (data.driveDate) data.driveDate = new Date(data.driveDate);
+    // Convert comma-separated branches string to array for PostgreSQL
+    if (typeof data.allowedBranches === 'string') {
+        data.allowedBranches = data.allowedBranches.split(',').map(b => b.trim()).filter(Boolean);
+    }
 
     const company = await prisma.company.update({
         where: { id },
@@ -174,16 +186,30 @@ const getAdminDashboardStats = async (req, res) => {
         value: branchMap[branch]
     }));
 
-    // Mock AreaChart data (Drive student participation over last 6 months)
-    // To keep the demo fast, returning static structured data matching the shape
-    const areaChartData = [
-        { month: 'Sep', applications: 120 },
-        { month: 'Oct', applications: 250 },
-        { month: 'Nov', applications: 400 },
-        { month: 'Dec', applications: 200 },
-        { month: 'Jan', applications: 800 },
-        { month: 'Feb', applications: 650 },
-    ];
+    // Real AreaChart data: Drive registrations grouped by month over last 6 months
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+    sixMonthsAgo.setDate(1);
+    sixMonthsAgo.setHours(0, 0, 0, 0);
+
+    const recentRegistrations = await prisma.driveRegistration.findMany({
+        where: { registeredAt: { gte: sixMonthsAgo } },
+        select: { registeredAt: true },
+    });
+
+    // Build month buckets
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const areaChartData = [];
+    for (let i = 0; i < 6; i++) {
+        const d = new Date();
+        d.setMonth(d.getMonth() - (5 - i));
+        areaChartData.push({ month: monthNames[d.getMonth()], applications: 0 });
+    }
+    recentRegistrations.forEach(reg => {
+        const regMonth = new Date(reg.registeredAt).getMonth();
+        const entry = areaChartData.find(e => e.month === monthNames[regMonth]);
+        if (entry) entry.applications++;
+    });
 
     const placementPercentage = totalStudents > 0
         ? Math.round((placedStudentsCount / totalStudents) * 100)
@@ -204,6 +230,45 @@ const getAdminDashboardStats = async (req, res) => {
     });
 };
 
+// ────────────────────────────────────────────────────────────
+// GET /api/companies/applications/all  (protected: TPO_ADMIN)
+// Returns all drive registrations grouped for admin view
+// ────────────────────────────────────────────────────────────
+const getStudentApplications = async (req, res) => {
+    try {
+        const registrations = await prisma.driveRegistration.findMany({
+            include: {
+                student: {
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true,
+                        enrollmentNumber: true,
+                        branch: true,
+                        cgpa: true,
+                        user: { select: { email: true } }
+                    }
+                },
+                company: {
+                    select: {
+                        id: true,
+                        name: true,
+                        jobRole: true,
+                        ctc: true,
+                        status: true,
+                    }
+                }
+            },
+            orderBy: { registeredAt: 'desc' }
+        });
+
+        return res.json({ success: true, applications: registrations });
+    } catch (error) {
+        console.error('Error fetching student applications:', error);
+        return res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
 module.exports = {
     createCompany,
     getCompanies,
@@ -211,4 +276,5 @@ module.exports = {
     updateCompany,
     deleteCompany,
     getAdminDashboardStats,
+    getStudentApplications,
 };

@@ -246,16 +246,16 @@ const StudentProfile = () => {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-slate-500 mb-1">Current CGPA</p>
-                    <p className="text-base font-bold text-emerald-600 font-mono text-lg">{profile.cgpa.toFixed(2)}</p>
+                    <p className="text-base font-bold text-emerald-600 font-mono text-lg">{(profile.cgpa ?? 0).toFixed(2)}</p>
                   </div>
 
                   <div>
                     <p className="text-sm font-medium text-slate-500 mb-1">10th Percentage</p>
-                    <p className="text-base font-semibold text-slate-700">{profile.tenth_percent}%</p>
+                    <p className="text-base font-semibold text-slate-700">{profile.tenth_percent ?? 'N/A'}%</p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-slate-500 mb-1">12th Percentage</p>
-                    <p className="text-base font-semibold text-slate-700">{profile.twelfth_percent}%</p>
+                    <p className="text-base font-semibold text-slate-700">{profile.twelfth_percent ?? 'N/A'}%</p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-slate-500 mb-1">Active Backlogs</p>

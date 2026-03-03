@@ -3,12 +3,10 @@
 // Handles: register, login, getMe
 // ============================================================
 
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../lib/prisma');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { z } = require('zod');
-
-const prisma = new PrismaClient();
 
 // ── Zod validation schemas ──────────────────────────────────
 

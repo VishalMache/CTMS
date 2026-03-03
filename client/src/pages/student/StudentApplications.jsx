@@ -14,7 +14,7 @@ const StatusTimeline = ({ rounds }) => {
   return (
     <div className="flex flex-wrap items-center gap-2 mt-4 text-xs font-medium">
       {rounds.map((round, idx) => {
-        const result = round.roundResults?.[0];
+        const result = round.results?.[0];
         const status = result?.status || 'PENDING';
 
         let Icon = Clock;
@@ -32,7 +32,7 @@ const StatusTimeline = ({ rounds }) => {
           <React.Fragment key={round.id}>
             <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border ${colorClass}`}>
               <Icon size={12} />
-              <span>{round.title}</span>
+              <span>{round.name || round.roundName}</span>
             </div>
             {idx < rounds.length - 1 && <ChevronRight size={14} className="text-slate-300" />}
           </React.Fragment>
@@ -67,9 +67,9 @@ const StudentApplications = () => {
             const company = app.company;
 
             // Check if student is completely rejected from the pipeline
-            const isRejected = company.selectionRounds?.some(r => r.roundResults?.[0]?.status === 'REJECTED');
+            const isRejected = company.selectionRounds?.some(r => r.results?.[0]?.status === 'REJECTED');
             // Check if student successfully cleared ALL scheduled rounds
-            const allRoundsCleared = company.selectionRounds?.length > 0 && company.selectionRounds.every(r => r.roundResults?.[0]?.status === 'SELECTED');
+            const allRoundsCleared = company.selectionRounds?.length > 0 && company.selectionRounds.every(r => r.results?.[0]?.status === 'SELECTED');
 
             return (
               <Card key={app.id} className={`p-6 border-slate-200 shadow-sm transition-all ${isRejected ? 'opacity-75 bg-slate-50' : 'bg-white'}`}>

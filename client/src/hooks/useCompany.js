@@ -66,3 +66,12 @@ export const useDeleteCompany = () => {
         }
     })
 }
+
+export const useStudentApplications = () => {
+    const { token } = useAuth()
+    return useQuery({
+        queryKey: ['studentApplications'],
+        queryFn: companyApi.fetchStudentApplications,
+        enabled: !!token,
+    })
+}

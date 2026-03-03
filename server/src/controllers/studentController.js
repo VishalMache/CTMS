@@ -4,10 +4,8 @@
 //          photo upload, and quick stats aggregation
 // ============================================================
 
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../lib/prisma');
 const { z } = require('zod');
-
-const prisma = new PrismaClient();
 
 // ── Zod: profile update schema ──────────────────────────────
 const updateProfileSchema = z.object({
@@ -212,7 +210,7 @@ const getApplications = async (req, res) => {
                     selectionRounds: {
                         orderBy: { roundNumber: 'asc' },
                         include: {
-                            roundResults: {
+                            results: {
                                 where: { studentId: student.id },
                                 select: { status: true },
                             },

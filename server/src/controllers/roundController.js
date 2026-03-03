@@ -3,24 +3,42 @@
 // Handles: Creating selection rounds & updating student results
 // ============================================================
 
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../lib/prisma');
 const { z } = require('zod');
 
-const prisma = new PrismaClient();
+// ── Validation helpers (Zod v4 compatible) ──────────────────
+const validateCreateRound = (body) => {
+    const errors = {};
+    if (!body.name || typeof body.name !== 'string' || body.name.trim().length === 0) {
+        errors.name = 'Round name is required';
+    }
+    if (!body.roundNumber || !Number.isInteger(body.roundNumber) || body.roundNumber < 1) {
+        errors.roundNumber = 'Round number must be a positive integer';
+    }
+    if (!body.date || isNaN(Date.parse(body.date))) {
+        errors.date = 'Valid date is required';
+    }
+    return {
+        success: Object.keys(errors).length === 0,
+        data: { name: body.name, roundNumber: body.roundNumber, date: body.date, description: body.description || '' },
+        errors
+    };
+};
 
-// ── Zod Schemas ─────────────────────────────────────────────
-const createRoundSchema = z.object({
-    name: z.string().min(1, 'Round name is required'),
-    roundNumber: z.number().int().min(1, 'Round number must be at least 1'),
-    date: z.string().refine((d) => !isNaN(Date.parse(d)), { message: 'Invalid date string' }),
-    description: z.string().optional(),
-});
-
-const updateResultSchema = z.object({
-    studentId: z.string().uuid('Invalid Student ID'),
-    status: z.enum(['PENDING', 'SELECTED', 'REJECTED']),
-    feedback: z.string().optional(),
-});
+const validateUpdateResult = (body) => {
+    const errors = {};
+    if (!body.studentId || typeof body.studentId !== 'string' || body.studentId.trim().length === 0) {
+        errors.studentId = 'Student ID is required';
+    }
+    if (!['PENDING', 'SELECTED', 'REJECTED'].includes(body.status)) {
+        errors.status = 'Status must be PENDING, SELECTED, or REJECTED';
+    }
+    return {
+        success: Object.keys(errors).length === 0,
+        data: { studentId: body.studentId, status: body.status, feedback: body.feedback || undefined },
+        errors
+    };
+};
 
 // ────────────────────────────────────────────────────────────
 // POST /api/rounds/company/:companyId  (protected: TPO_ADMIN)
@@ -33,9 +51,9 @@ const createRound = async (req, res) => {
     if (!company) return res.status(404).json({ success: false, message: 'Company not found' });
 
     // Validate Input
-    const parsed = createRoundSchema.safeParse(req.body);
+    const parsed = validateCreateRound(req.body);
     if (!parsed.success) {
-        return res.status(400).json({ success: false, message: 'Validation failed', errors: parsed.error.flatten().fieldErrors });
+        return res.status(400).json({ success: false, message: 'Validation failed', errors: parsed.errors });
     }
 
     const { name, roundNumber, date, description } = parsed.data;
@@ -118,7 +136,7 @@ const getRoundsForCompany = async (req, res) => {
             results: {
                 include: {
                     student: {
-                        include: { user: { select: { firstName: true, lastName: true, email: true } } }
+                        include: { user: { select: { email: true } } }
                     }
                 }
             }
@@ -135,7 +153,7 @@ const getRoundsForCompany = async (req, res) => {
         candidates: r.results.map(res => ({
             resultId: res.id,
             studentId: res.student.id,
-            name: `${res.student.user.firstName} ${res.student.user.lastName}`,
+            name: `${res.student.firstName} ${res.student.lastName}`,
             email: res.student.user.email,
             branch: res.student.branch,
             status: res.status,
@@ -151,34 +169,76 @@ const getRoundsForCompany = async (req, res) => {
 // PATCH /api/rounds/:roundId/results  (protected: TPO_ADMIN)
 // ────────────────────────────────────────────────────────────
 const updateStudentStatus = async (req, res) => {
-    const { roundId } = req.params;
+    try {
+        const { roundId } = req.params;
 
-    // Validate Input
-    const parsed = updateResultSchema.safeParse(req.body);
-    if (!parsed.success) {
-        return res.status(400).json({ success: false, message: 'Validation failed', errors: parsed.error.flatten().fieldErrors });
+        // Validate Input
+        const parsed = validateUpdateResult(req.body);
+        if (!parsed.success) {
+            return res.status(400).json({ success: false, message: 'Validation failed', errors: parsed.errors });
+        }
+
+        const { studentId, status, feedback } = parsed.data;
+
+        // Ensure the round exists
+        const round = await prisma.selectionRound.findUnique({ where: { id: roundId } });
+        if (!round) return res.status(404).json({ success: false, message: 'Round not found' });
+
+        // Update or Create the specific result
+        const resultRecord = await prisma.roundResult.upsert({
+            where: {
+                roundId_studentId: { roundId, studentId }
+            },
+            update: { status, feedback },
+            create: { roundId, studentId, status, feedback },
+        });
+
+        // ── Auto-seed into next round when SELECTED ──
+        // If student is SELECTED, check if a next round exists and seed them in
+        if (status === 'SELECTED') {
+            const nextRound = await prisma.selectionRound.findFirst({
+                where: { companyId: round.companyId, roundNumber: round.roundNumber + 1 }
+            });
+
+            if (nextRound) {
+                // Check if student already has a result in the next round
+                const existingNextResult = await prisma.roundResult.findUnique({
+                    where: { roundId_studentId: { roundId: nextRound.id, studentId } }
+                });
+
+                if (!existingNextResult) {
+                    await prisma.roundResult.create({
+                        data: { roundId: nextRound.id, studentId, status: 'PENDING' }
+                    });
+                    console.log(`[ROUND] Auto-seeded student ${studentId} into round ${nextRound.roundNumber} (${nextRound.name})`);
+                }
+            }
+        }
+
+        // ── Remove from next round when REJECTED ──
+        // If student is REJECTED, remove their PENDING result from the next round (if any)
+        if (status === 'REJECTED') {
+            const nextRound = await prisma.selectionRound.findFirst({
+                where: { companyId: round.companyId, roundNumber: round.roundNumber + 1 }
+            });
+
+            if (nextRound) {
+                await prisma.roundResult.deleteMany({
+                    where: { roundId: nextRound.id, studentId, status: 'PENDING' }
+                });
+            }
+        }
+
+        console.log(`[ROUND] Updated student ${studentId} in round ${roundId}: ${status}`);
+        return res.json({
+            success: true,
+            message: `Candidate marked as ${status}`,
+            result: resultRecord
+        });
+    } catch (error) {
+        console.error('[ROUND] Update error:', error);
+        return res.status(500).json({ success: false, message: error.message || 'Server error' });
     }
-
-    const { studentId, status, feedback } = parsed.data;
-
-    // Ensure the round exists
-    const round = await prisma.selectionRound.findUnique({ where: { id: roundId } });
-    if (!round) return res.status(404).json({ success: false, message: 'Round not found' });
-
-    // Update or Create the specific result
-    const resultRecord = await prisma.roundResult.upsert({
-        where: {
-            roundId_studentId: { roundId, studentId }
-        },
-        update: { status, feedback },
-        create: { roundId, studentId, status, feedback },
-    });
-
-    return res.json({
-        success: true,
-        message: `Candidate marked as ${status}`,
-        result: resultRecord
-    });
 };
 
 module.exports = {

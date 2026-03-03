@@ -44,11 +44,12 @@ const StudentTraining = () => {
               <div className="p-5 border-b border-slate-100 bg-white">
                 <Badge variant="outline" className={cn(
                   "mb-2 bg-slate-50 inline-block",
-                  session.type === 'TECHNICAL' ? "text-blue-700 border-blue-200 bg-blue-50" :
-                    session.type === 'SOFT_SKILLS' ? "text-fuchsia-700 border-fuchsia-200 bg-fuchsia-50" :
-                      "text-teal-700 border-teal-200 bg-teal-50"
+                  session.type === 'TECHNICAL_LECTURE' ? "text-blue-700 border-blue-200 bg-blue-50" :
+                    session.type === 'MOCK_INTERVIEW' ? "text-fuchsia-700 border-fuchsia-200 bg-fuchsia-50" :
+                      session.type === 'APTITUDE' ? "text-amber-700 border-amber-200 bg-amber-50" :
+                        "text-teal-700 border-teal-200 bg-teal-50"
                 )}>
-                  {session.type}
+                  {session.type?.replace(/_/g, ' ')}
                 </Badge>
                 <h3 className="text-lg font-bold text-slate-800 line-clamp-2">{session.title}</h3>
                 <p className="text-sm font-medium text-slate-600 mt-1">Conducted by: <span className="text-slate-800">{session.conductedBy}</span></p>
@@ -107,11 +108,12 @@ const StudentTraining = () => {
                 )}
               </div>
             </Card>
-          ))}
-        </div>
+          ))
+          }
+        </div >
       )}
 
-    </DashboardLayout>
+    </DashboardLayout >
   )
 }
 

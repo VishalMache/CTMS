@@ -3,10 +3,8 @@
 // Handles: list, add (with Cloudinary upload), and delete certificates
 // ============================================================
 
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../lib/prisma');
 const { z } = require('zod');
-
-const prisma = new PrismaClient();
 
 // ── Zod: certificate metadata schema ───────────────────────
 const addCertificateSchema = z.object({

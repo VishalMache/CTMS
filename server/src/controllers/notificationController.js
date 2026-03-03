@@ -3,10 +3,8 @@
 // Handles: Fetching alerts, marking as read, and admin broadcasts.
 // ============================================================
 
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../lib/prisma');
 const { z } = require('zod');
-
-const prisma = new PrismaClient();
 
 // ── Zod Schemas ─────────────────────────────────────────────
 const broadcastSchema = z.object({

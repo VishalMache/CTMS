@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ArrowLeft, Plus, Users, GitMerge, Check, X, Calendar, Edit2 } from 'lucide-react'
+import { ArrowLeft, Plus, Users, GitMerge, Check, X, Calendar, Edit2, Award, ChevronRight } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -145,6 +145,34 @@ const CompanyDriveManager = () => {
                 </Badge>
             </div>
 
+            {/* ── Drive Stats Summary ── */}
+            {(() => {
+                const totalRounds = rounds?.length || 0;
+                const totalRegistered = students?.length || 0;
+                const lastRound = rounds?.length > 0 ? rounds.reduce((a, b) => a.roundNumber > b.roundNumber ? a : b) : null;
+                const placedCount = lastRound?.candidates?.filter(c => c.status === 'SELECTED')?.length || 0;
+
+                return (
+                    <div className="grid grid-cols-3 gap-4 mb-6">
+                        <Card className="p-4 border-slate-200 bg-gradient-to-br from-blue-50 to-blue-100/50">
+                            <p className="text-xs text-blue-600 font-semibold uppercase tracking-wider">Total Rounds</p>
+                            <p className="text-2xl font-black text-blue-800 mt-1">{totalRounds}</p>
+                            <p className="text-xs text-blue-500 mt-0.5">Selection stages created</p>
+                        </Card>
+                        <Card className="p-4 border-slate-200 bg-gradient-to-br from-amber-50 to-amber-100/50">
+                            <p className="text-xs text-amber-600 font-semibold uppercase tracking-wider">Registered Students</p>
+                            <p className="text-2xl font-black text-amber-800 mt-1">{totalRegistered}</p>
+                            <p className="text-xs text-amber-500 mt-0.5">Applied for this drive</p>
+                        </Card>
+                        <Card className="p-4 border-slate-200 bg-gradient-to-br from-emerald-50 to-emerald-100/50">
+                            <p className="text-xs text-emerald-600 font-semibold uppercase tracking-wider">Placed Students</p>
+                            <p className="text-2xl font-black text-emerald-800 mt-1">{placedCount}</p>
+                            <p className="text-xs text-emerald-500 mt-0.5">Cleared all rounds</p>
+                        </Card>
+                    </div>
+                );
+            })()}
+
             <Tabs defaultValue="pipeline" className="w-full">
                 <TabsList className="mb-6 bg-white border border-slate-200">
                     <TabsTrigger value="pipeline" className="data-[state=active]:bg-teal-50 data-[state=active]:text-teal-700">
@@ -153,14 +181,17 @@ const CompanyDriveManager = () => {
                     <TabsTrigger value="students" className="data-[state=active]:bg-teal-50 data-[state=active]:text-teal-700">
                         Registered Students ({students?.length || 0})
                     </TabsTrigger>
+                    <TabsTrigger value="placements" className="data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700">
+                        <Award size={14} className="mr-1.5" /> Placements
+                    </TabsTrigger>
                 </TabsList>
 
                 {/* ── PIPELINE TAB ── */}
                 <TabsContent value="pipeline" className="space-y-6">
                     <div className="flex justify-between items-center bg-teal-50/50 p-4 border border-teal-100 rounded-xl">
                         <div>
-                            <h3 className="font-bold text-slate-800">Drive Timeline</h3>
-                            <p className="text-sm text-slate-500">Create sequential rounds to automatically filter candidates.</p>
+                            <h3 className="font-bold text-slate-800">Selection Pipeline</h3>
+                            <p className="text-sm text-slate-500">Track each student's progress through selection rounds individually.</p>
                         </div>
                         <Button onClick={() => setIsRoundModalOpen(true)} className="gap-2 bg-teal-600 hover:bg-teal-700">
                             <Plus size={16} /> Add Round {nextRoundNum}
@@ -173,74 +204,152 @@ const CompanyDriveManager = () => {
                             <h3 className="text-lg font-bold text-slate-700">No Rounds Created</h3>
                             <p className="text-sm text-slate-500 mt-2">Start building the selection pipeline by adding the first round.</p>
                         </Card>
-                    ) : (
-                        <div className="space-y-6 relative before:absolute before:inset-0 before:ml-6 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-200 before:to-transparent">
-                            {rounds.map((round, idx) => (
-                                <div key={round.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                                    <div className="flex items-center justify-center w-12 h-12 rounded-full border border-white bg-slate-100 text-slate-500 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2">
-                                        <span className="font-bold">{round.roundNumber}</span>
-                                    </div>
-                                    <Card className="w-[calc(100%-4rem)] md:w-[calc(50%-3rem)] p-6 shadow-sm border-slate-200 hover:border-teal-300 transition-colors">
-                                        <div className="flex justify-between items-start mb-4">
-                                            <div>
-                                                <h4 className="text-lg font-bold text-slate-800">{round.name}</h4>
-                                                <span className="text-xs text-slate-500 flex items-center gap-1 mt-1">
-                                                    <Calendar size={12} /> {new Date(round.date).toLocaleDateString()}
-                                                </span>
-                                            </div>
-                                            <Badge variant="outline" className="bg-slate-50">
-                                                {round.candidates?.length || 0} Candidates
-                                            </Badge>
-                                        </div>
+                    ) : (() => {
+                        // Build a per-student view across all rounds
+                        const studentMap = {};
+                        // First, collect all registered students
+                        students?.forEach(s => {
+                            studentMap[s.id] = {
+                                id: s.id,
+                                name: `${s.firstName} ${s.lastName}`,
+                                email: s.email,
+                                branch: s.branch,
+                                enrollmentNumber: s.enrollmentNumber,
+                                roundStatuses: {} // roundId -> { status, resultId, feedback }
+                            };
+                        });
+                        // Then, overlay round result data
+                        rounds.forEach(round => {
+                            round.candidates?.forEach(c => {
+                                if (studentMap[c.studentId]) {
+                                    studentMap[c.studentId].roundStatuses[round.id] = {
+                                        status: c.status,
+                                        resultId: c.resultId,
+                                        feedback: c.feedback
+                                    };
+                                }
+                            });
+                        });
+                        const allStudents = Object.values(studentMap);
 
-                                        {round.candidates?.length > 0 ? (
-                                            <div className="space-y-3 mt-4 max-h-[300px] overflow-y-auto pr-2">
-                                                {round.candidates.map(candidate => (
-                                                    <div key={candidate.resultId} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-lg border border-slate-100 bg-slate-50/50 gap-3">
-                                                        <div>
-                                                            <p className="text-sm font-bold text-slate-800">{candidate.name}</p>
-                                                            <p className="text-xs text-slate-500">{candidate.branch} • {candidate.email}</p>
+                        return (
+                            <div className="space-y-4">
+                                {/* Round headers legend */}
+                                <Card className="p-4 border-slate-200 bg-white">
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Rounds Overview</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {rounds.map(r => (
+                                            <Badge key={r.id} variant="outline" className="bg-slate-50 text-xs px-3 py-1.5">
+                                                <span className="font-bold text-teal-700 mr-1.5">R{r.roundNumber}</span> {r.name}
+                                                {r.date && <span className="text-slate-400 ml-1.5">• {new Date(r.date).toLocaleDateString()}</span>}
+                                            </Badge>
+                                        ))}
+                                    </div>
+                                </Card>
+
+                                {allStudents.length === 0 ? (
+                                    <Card className="py-8 text-center border-dashed">
+                                        <p className="text-slate-500">No students registered for this drive yet.</p>
+                                    </Card>
+                                ) : (
+                                    allStudents.map(student => {
+                                        // Determine overall status
+                                        const isRejected = rounds.some(r => student.roundStatuses[r.id]?.status === 'REJECTED');
+                                        const allPassed = rounds.length > 0 && rounds.every(r => student.roundStatuses[r.id]?.status === 'SELECTED');
+
+                                        return (
+                                            <Card key={student.id} className={`border-slate-200 overflow-hidden transition-all ${isRejected ? 'opacity-60 bg-slate-50' : 'bg-white'}`}>
+                                                {/* Student Header */}
+                                                <div className="flex items-center justify-between p-4 border-b border-slate-100">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-100 to-teal-200 flex items-center justify-center text-teal-700 font-bold text-sm shrink-0">
+                                                            {student.name.split(' ').map(n => n[0]).join('')}
                                                         </div>
-                                                        <div className="flex items-center gap-2">
-                                                            {candidate.status === 'PENDING' ? (
-                                                                <>
-                                                                    <Button
-                                                                        size="sm"
-                                                                        variant="outline"
-                                                                        className="h-8 px-2 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
-                                                                        onClick={() => updateStatus({ roundId: round.id, studentId: candidate.studentId, status: 'REJECTED' })}
-                                                                        disabled={updatingStatus}
-                                                                        title="Reject"
-                                                                    >
-                                                                        <X size={14} />
-                                                                    </Button>
-                                                                    <Button
-                                                                        size="sm"
-                                                                        className="h-8 px-2 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border-none"
-                                                                        onClick={() => updateStatus({ roundId: round.id, studentId: candidate.studentId, status: 'SELECTED' })}
-                                                                        disabled={updatingStatus}
-                                                                        title="Select (Pass to next round)"
-                                                                    >
-                                                                        <Check size={14} /> Pass
-                                                                    </Button>
-                                                                </>
-                                                            ) : (
-                                                                <Badge variant={candidate.status === 'SELECTED' ? 'success' : 'destructive'} className="text-[10px] uppercase">
-                                                                    {candidate.status}
-                                                                </Badge>
-                                                            )}
+                                                        <div>
+                                                            <p className="font-bold text-slate-800">{student.name}</p>
+                                                            <p className="text-xs text-slate-500">{student.enrollmentNumber} • {student.branch} • {student.email}</p>
                                                         </div>
                                                     </div>
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            <p className="text-sm text-slate-400 text-center py-4 bg-slate-50 rounded-lg">No candidates in this round yet.</p>
-                                        )}
-                                    </Card>
-                                </div>
-                            ))}
-                        </div>
-                    )}
+                                                    <div>
+                                                        {isRejected ? (
+                                                            <Badge variant="destructive" className="bg-red-500 text-[10px] uppercase">Eliminated</Badge>
+                                                        ) : allPassed ? (
+                                                            <Badge variant="success" className="bg-emerald-500 text-[10px] uppercase">Placed</Badge>
+                                                        ) : (
+                                                            <Badge variant="secondary" className="bg-blue-100 text-blue-700 text-[10px] uppercase">In Progress</Badge>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                {/* Round Progress Row */}
+                                                <div className="p-4 flex flex-wrap items-center gap-3">
+                                                    {rounds.map((round, idx) => {
+                                                        const rs = student.roundStatuses[round.id];
+                                                        const status = rs?.status || null; // null = not in this round yet
+                                                        const prevRound = idx > 0 ? rounds[idx - 1] : null;
+                                                        const prevStatus = prevRound ? student.roundStatuses[prevRound.id]?.status : 'SELECTED'; // First round always eligible
+                                                        const isEligible = prevStatus === 'SELECTED' || idx === 0;
+
+                                                        return (
+                                                            <React.Fragment key={round.id}>
+                                                                {idx > 0 && (
+                                                                    <ChevronRight size={14} className="text-slate-300 shrink-0" />
+                                                                )}
+                                                                <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm ${status === 'SELECTED' ? 'border-emerald-200 bg-emerald-50' :
+                                                                    status === 'REJECTED' ? 'border-red-200 bg-red-50' :
+                                                                        status === 'PENDING' ? 'border-amber-200 bg-amber-50' :
+                                                                            'border-slate-200 bg-slate-50'
+                                                                    }`}>
+                                                                    <span className="font-bold text-slate-600 text-xs">R{round.roundNumber}</span>
+
+                                                                    {status === 'SELECTED' && (
+                                                                        <span className="flex items-center gap-1 text-emerald-700 font-semibold text-xs">
+                                                                            <Check size={12} /> Passed
+                                                                        </span>
+                                                                    )}
+                                                                    {status === 'REJECTED' && (
+                                                                        <span className="flex items-center gap-1 text-red-600 font-semibold text-xs">
+                                                                            <X size={12} /> Rejected
+                                                                        </span>
+                                                                    )}
+                                                                    {(status === 'PENDING' || (!status && isEligible)) && (
+                                                                        <div className="flex items-center gap-1.5">
+                                                                            <Button
+                                                                                size="sm"
+                                                                                variant="outline"
+                                                                                className="h-6 w-6 p-0 border-red-200 text-red-600 hover:bg-red-100"
+                                                                                onClick={() => updateStatus({ roundId: round.id, studentId: student.id, status: 'REJECTED' })}
+                                                                                disabled={updatingStatus}
+                                                                                title="Reject"
+                                                                            >
+                                                                                <X size={12} />
+                                                                            </Button>
+                                                                            <Button
+                                                                                size="sm"
+                                                                                className="h-6 px-2 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border-none text-xs"
+                                                                                onClick={() => updateStatus({ roundId: round.id, studentId: student.id, status: 'SELECTED' })}
+                                                                                disabled={updatingStatus}
+                                                                                title="Pass"
+                                                                            >
+                                                                                <Check size={12} /> Pass
+                                                                            </Button>
+                                                                        </div>
+                                                                    )}
+                                                                    {!status && !isEligible && (
+                                                                        <span className="text-slate-400 text-xs italic">—</span>
+                                                                    )}
+                                                                </div>
+                                                            </React.Fragment>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </Card>
+                                        );
+                                    })
+                                )}
+                            </div>
+                        );
+                    })()}
                 </TabsContent>
 
                 {/* ── REGISTERED STUDENTS TAB ── */}
@@ -263,8 +372,8 @@ const CompanyDriveManager = () => {
                                         {students.map(student => (
                                             <tr key={student.registrationId} className="hover:bg-slate-50 transition-colors">
                                                 <td className="py-3 px-6">
-                                                    <p className="font-bold text-sm text-slate-800">{student.user.firstName} {student.user.lastName}</p>
-                                                    <p className="text-xs text-slate-500 drop-shadow-sm">{student.enrollmentNo}</p>
+                                                    <p className="font-bold text-sm text-slate-800">{student.firstName} {student.lastName}</p>
+                                                    <p className="text-xs text-slate-500 drop-shadow-sm">{student.enrollmentNumber}</p>
                                                 </td>
                                                 <td className="py-3 px-6">
                                                     <div className="flex items-center gap-2">
@@ -282,6 +391,65 @@ const CompanyDriveManager = () => {
                                 </table>
                             </div>
                         )}
+                    </Card>
+                </TabsContent>
+
+                {/* ── PLACEMENTS TAB ── */}
+                <TabsContent value="placements">
+                    <Card className="overflow-hidden border-slate-200">
+                        {(() => {
+                            const lastRound = rounds?.length > 0 ? rounds.reduce((a, b) => a.roundNumber > b.roundNumber ? a : b) : null;
+                            const placedStudents = lastRound?.candidates?.filter(c => c.status === 'SELECTED') || [];
+
+                            if (placedStudents.length === 0) {
+                                return (
+                                    <div className="py-12 text-center">
+                                        <Award size={40} className="mx-auto text-slate-300 mb-4" />
+                                        <h3 className="text-lg font-bold text-slate-700">No Placements Yet</h3>
+                                        <p className="text-sm text-slate-500 mt-2">Students selected in the final round will appear here as placed.</p>
+                                    </div>
+                                );
+                            }
+
+                            return (
+                                <div className="overflow-x-auto">
+                                    <div className="p-4 border-b border-slate-100 bg-emerald-50/50">
+                                        <h3 className="font-bold text-emerald-800 flex items-center gap-2">
+                                            <Award size={18} className="text-emerald-600" /> Placed Students ({placedStudents.length})
+                                        </h3>
+                                        <p className="text-xs text-emerald-600 mt-1">Students who cleared all selection rounds for {company.name}</p>
+                                    </div>
+                                    <table className="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs uppercase">
+                                                <th className="py-3 px-6 font-semibold">#</th>
+                                                <th className="py-3 px-6 font-semibold">Student Name</th>
+                                                <th className="py-3 px-6 font-semibold">Branch</th>
+                                                <th className="py-3 px-6 font-semibold">Email</th>
+                                                <th className="py-3 px-6 font-semibold">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-100 bg-white">
+                                            {placedStudents.map((student, idx) => (
+                                                <tr key={student.resultId} className="hover:bg-emerald-50/30 transition-colors">
+                                                    <td className="py-3 px-6 text-sm text-slate-500 font-mono">{idx + 1}</td>
+                                                    <td className="py-3 px-6">
+                                                        <p className="font-bold text-sm text-slate-800">{student.name}</p>
+                                                    </td>
+                                                    <td className="py-3 px-6">
+                                                        <Badge variant="outline" className="text-xs">{student.branch}</Badge>
+                                                    </td>
+                                                    <td className="py-3 px-6 text-sm text-slate-600">{student.email}</td>
+                                                    <td className="py-3 px-6">
+                                                        <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">PLACED</Badge>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            );
+                        })()}
                     </Card>
                 </TabsContent>
             </Tabs>

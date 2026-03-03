@@ -20,9 +20,10 @@ import {
 const studentNav = [
     { icon: Home, label: 'Dashboard', path: '/student/dashboard' },
     { icon: User, label: 'My Profile', path: '/student/profile' },
-    { icon: Briefcase, label: 'Campus Drives', path: '/student/drives' },
+    { icon: FileText, label: 'Documents', path: '/student/resume' },
+    { icon: Briefcase, label: 'Campus Drives', path: '/student/companies' },
     { icon: BookOpen, label: 'Training', path: '/student/training' },
-    { icon: FileText, label: 'Mock Tests', path: '/student/mock-tests' },
+    { icon: FlaskConical, label: 'Mock Tests', path: '/student/mock-tests' },
     { icon: ClipboardList, label: 'Applications & Status', path: '/student/applications' },
     { icon: Bell, label: 'Notifications', path: '/student/notifications' },
 ]

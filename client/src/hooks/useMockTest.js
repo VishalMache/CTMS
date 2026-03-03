@@ -66,7 +66,11 @@ export const useSubmitTest = () => {
     const queryClient = useQueryClient()
     return useMutation({
         mutationFn: mockTestApi.submitTest,
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['mock-tests'] })
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['mock-tests'] })
+            queryClient.invalidateQueries({ queryKey: ['mock-test-results'] })
+            queryClient.invalidateQueries({ queryKey: ['mock-test-leaderboard'] })
+        }
     })
 }
 
@@ -76,5 +80,12 @@ export const useTestResults = (testId) => {
         queryKey: ['mock-test-results', testId],
         queryFn: () => mockTestApi.fetchTestResults(testId),
         enabled: !!testId
+    })
+}
+
+export const useLeaderboard = () => {
+    return useQuery({
+        queryKey: ['mock-test-leaderboard'],
+        queryFn: mockTestApi.fetchLeaderboard,
     })
 }

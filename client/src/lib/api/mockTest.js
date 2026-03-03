@@ -48,3 +48,8 @@ export const fetchTestResults = async (testId) => {
     const res = await api.get(`/mock-tests/${testId}/results`)
     return res.data
 }
+
+export const fetchLeaderboard = async () => {
+    const res = await api.get('/mock-tests/leaderboard')
+    return res.data
+}

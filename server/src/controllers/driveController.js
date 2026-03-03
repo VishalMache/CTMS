@@ -3,9 +3,7 @@
 // Handles: Student registration logic + TPO viewing registered students
 // ============================================================
 
-const { PrismaClient } = require('@prisma/client');
-
-const prisma = new PrismaClient();
+const prisma = require('../lib/prisma');
 
 // ── Helper: Resolve current student id from JWT userId ─────
 const getStudentId = async (userId) => {
@@ -70,11 +68,12 @@ const registerForDrive = async (req, res) => {
         reasons.push('Active backlogs are not allowed for this drive.');
     }
 
-    // d. Allowed Branches check (CSV array)
-    // company.allowedBranches is string like "CSE,IT,ECE"
-    const branches = company.allowedBranches.split(',').map(b => b.trim().toUpperCase());
+    // d. Allowed Branches check (PostgreSQL array or CSV string fallback)
+    const branches = Array.isArray(company.allowedBranches)
+        ? company.allowedBranches.map(b => b.toUpperCase())
+        : company.allowedBranches.split(',').map(b => b.trim().toUpperCase());
     if (!branches.includes(student.branch.toUpperCase())) {
-        reasons.push(`Your branch (${student.branch}) is not eligible. Allowed: ${company.allowedBranches}.`);
+        reasons.push(`Your branch (${student.branch}) is not eligible. Allowed: ${branches.join(', ')}.`);
     }
 
     // 5. Result

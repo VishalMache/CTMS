@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils'
 // ── Validation Schema matching Backend ──────────────────────
 const sessionSchema = z.object({
   title: z.string().min(1, 'Title is required'),
-  type: z.enum(['WORKSHOP', 'SEMINAR', 'TECHNICAL', 'SOFT_SKILLS']),
+  type: z.enum(['TECHNICAL_LECTURE', 'MOCK_INTERVIEW', 'APTITUDE', 'HR_PREP']),
   conductedBy: z.string().min(1, 'Conductor name is required'),
   sessionDate: z.string().min(1, 'Date is required'),
   description: z.string().optional()
@@ -27,7 +27,7 @@ const SessionModal = ({ open, setOpen }) => {
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm({
     resolver: zodResolver(sessionSchema),
-    defaultValues: { type: 'WORKSHOP' }
+    defaultValues: { type: 'TECHNICAL_LECTURE' }
   })
 
   const onSubmit = (data) => {
@@ -63,10 +63,10 @@ const SessionModal = ({ open, setOpen }) => {
                 className="flex h-10 w-full rounded-md border border-slate-300 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 mt-1"
                 {...register('type')}
               >
-                <option value="WORKSHOP">Workshop</option>
-                <option value="SEMINAR">Seminar</option>
-                <option value="TECHNICAL">Technical</option>
-                <option value="SOFT_SKILLS">Soft Skills</option>
+                <option value="TECHNICAL_LECTURE">Technical Lecture</option>
+                <option value="MOCK_INTERVIEW">Mock Interview</option>
+                <option value="APTITUDE">Aptitude</option>
+                <option value="HR_PREP">HR Preparation</option>
               </select>
             </div>
             <div>
@@ -271,9 +271,10 @@ const AdminTraining = () => {
                 <div className="flex justify-between items-start mb-2">
                   <Badge variant="outline" className={cn(
                     "bg-slate-50",
-                    session.type === 'TECHNICAL' ? "text-blue-700 border-blue-200 bg-blue-50" :
-                      session.type === 'SOFT_SKILLS' ? "text-fuchsia-700 border-fuchsia-200 bg-fuchsia-50" :
-                        "text-teal-700 border-teal-200 bg-teal-50"
+                    session.type === 'TECHNICAL_LECTURE' ? "text-blue-700 border-blue-200 bg-blue-50" :
+                      session.type === 'MOCK_INTERVIEW' ? "text-fuchsia-700 border-fuchsia-200 bg-fuchsia-50" :
+                        session.type === 'APTITUDE' ? "text-amber-700 border-amber-200 bg-amber-50" :
+                          "text-teal-700 border-teal-200 bg-teal-50"
                   )}>
                     {session.type}
                   </Badge>
