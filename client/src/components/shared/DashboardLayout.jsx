@@ -14,7 +14,7 @@ const DashboardLayout = ({ children, title, subtitle }) => {
 
     if (isLoadingUser) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-50">
+            <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--surface-bg)' }}>
                 <div className="text-center space-y-3">
                     <Spinner size={36} />
                     <p className="text-sm text-slate-400 font-medium">Loading your workspace…</p>
@@ -24,7 +24,7 @@ const DashboardLayout = ({ children, title, subtitle }) => {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 flex">
+        <div className="min-h-screen flex" style={{ background: 'var(--surface-bg)' }}>
             {/* Fixed Sidebar */}
             <Sidebar />
 

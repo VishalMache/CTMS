@@ -35,27 +35,28 @@ const TopHeader = ({ title, subtitle }) => {
     }
 
     return (
-        <header className="h-16 bg-white border-b border-slate-200 px-6 flex items-center gap-4 sticky top-0 z-20">
+        <header className="h-16 px-6 flex items-center gap-4 sticky top-0 z-20" style={{ background: 'var(--surface-header)', borderBottom: '1px solid var(--surface-border)' }}>
 
             {/* ── Page title ──────────────────────────────── */}
             <div className="flex-1 min-w-0">
                 {title && (
                     <div>
-                        <h1 className="text-lg font-bold text-slate-800 leading-tight truncate">{title}</h1>
+                        <h1 className="text-lg font-bold leading-tight truncate" style={{ color: 'var(--text-primary)' }}>{title}</h1>
                         {subtitle && <p className="text-xs text-slate-400 truncate">{subtitle}</p>}
                     </div>
                 )}
             </div>
 
             {/* ── Global search ───────────────────────────── */}
-            <div className="hidden md:flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 h-9 w-64 transition-all focus-within:border-teal-400 focus-within:bg-white">
+            <div className="hidden md:flex items-center gap-2 rounded-lg px-3 h-9 w-64 transition-all" style={{ background: 'var(--surface-bg)', border: '1px solid var(--surface-border)' }}>
                 <Search size={14} className="text-slate-400 shrink-0" />
                 <input
                     type="text"
                     placeholder="Search anything..."
                     value={searchValue}
                     onChange={(e) => setSearchValue(e.target.value)}
-                    className="bg-transparent flex-1 text-sm text-slate-700 placeholder:text-slate-400 outline-none"
+                    className="bg-transparent flex-1 text-sm placeholder:text-slate-400 outline-none"
+                    style={{ color: 'var(--text-primary)' }}
                 />
             </div>
 
@@ -74,7 +75,7 @@ const TopHeader = ({ title, subtitle }) => {
                 {showNotifMenu && (
                     <>
                         <div className="fixed inset-0 z-40" onClick={() => setShowNotifMenu(false)} />
-                        <div className="absolute right-0 top-full mt-2 w-80 bg-white border border-slate-200 rounded-xl shadow-lg z-50 overflow-hidden flex flex-col max-h-[400px]">
+                        <div className="absolute right-0 top-full mt-2 w-80 rounded-xl shadow-lg z-50 overflow-hidden flex flex-col max-h-[400px]" style={{ background: 'var(--surface-card)', border: '1px solid var(--surface-border)' }}>
                             <div className="px-4 py-3 border-b border-slate-100 flex justify-between items-center bg-slate-50">
                                 <h3 className="font-bold text-slate-800">Notifications</h3>
                                 {unreadCount > 0 && (
@@ -168,7 +169,7 @@ const TopHeader = ({ title, subtitle }) => {
                             className="fixed inset-0 z-40"
                             onClick={() => setShowUserMenu(false)}
                         />
-                        <div className="absolute right-0 top-full mt-2 w-56 bg-white border border-slate-200 rounded-xl shadow-lg z-50 overflow-hidden">
+                        <div className="absolute right-0 top-full mt-2 w-56 rounded-xl shadow-lg z-50 overflow-hidden" style={{ background: 'var(--surface-card)', border: '1px solid var(--surface-border)' }}>
                             {/* User info header */}
                             <div className="px-4 py-3 border-b border-slate-100">
                                 <p className="text-sm font-semibold text-slate-800 truncate">{displayName}</p>

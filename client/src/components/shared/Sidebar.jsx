@@ -9,11 +9,12 @@ import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui'
 import { getInitials } from '@/lib/utils'
 import { useAuth } from '@/context/AuthContext'
+import { useTheme } from '@/context/ThemeContext'
 import {
     LayoutDashboard, User, FileText, Building2, ClipboardList,
-    GitBranch, BookOpen, FlaskConical, Bell, BarChart3,
-    Users, Trophy, GraduationCap, LogOut, ChevronLeft, ChevronRight,
-    Briefcase, Award, Home, BellRing
+    BookOpen, FlaskConical, Bell, BarChart3,
+    Users, GraduationCap, LogOut, ChevronLeft, ChevronRight,
+    Briefcase, Award, Home, Sun, Moon
 } from 'lucide-react'
 
 // ── Navigation definitions ────────────────────────────────
@@ -40,6 +41,7 @@ const adminNav = [
 
 const Sidebar = () => {
     const { user, logout } = useAuth()
+    const { theme, toggleTheme } = useTheme()
     const navigate = useNavigate()
     const [collapsed, setCollapsed] = useState(false)
 
@@ -58,23 +60,27 @@ const Sidebar = () => {
     return (
         <aside
             className={cn(
-                'fixed left-0 top-0 h-screen bg-white border-r border-slate-200 z-30',
-                'flex flex-col transition-[width] duration-300 ease-in-out shadow-sm',
-                collapsed ? 'w-[70px]' : 'w-[240px]'
+                'fixed left-0 top-0 h-screen z-30',
+                'flex flex-col transition-[width] duration-300 ease-in-out'
             )}
+            style={{
+                width: collapsed ? '70px' : '240px',
+                background: 'var(--surface-sidebar)',
+                borderRight: '1px solid var(--surface-border)',
+            }}
         >
             {/* ── Logo ──────────────────────────────────────── */}
             <div className={cn(
-                'flex items-center h-16 px-4 border-b border-slate-100 shrink-0',
+                'flex items-center h-16 px-4 shrink-0',
                 collapsed ? 'justify-center' : 'gap-3'
-            )}>
+            )} style={{ borderBottom: '1px solid var(--surface-border-light)' }}>
                 <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center shrink-0">
                     <GraduationCap size={18} className="text-white" />
                 </div>
                 {!collapsed && (
                     <div>
-                        <p className="text-sm font-bold text-slate-800 leading-tight">CPMS</p>
-                        <p className="text-[10px] text-slate-400 leading-tight">Placement Portal</p>
+                        <p className="text-sm font-bold leading-tight" style={{ color: 'var(--text-primary)' }}>CTMS</p>
+                        <p className="text-[10px] leading-tight" style={{ color: 'var(--text-muted)' }}>Placement Portal</p>
                     </div>
                 )}
             </div>
@@ -83,9 +89,14 @@ const Sidebar = () => {
             <button
                 onClick={() => setCollapsed(!collapsed)}
                 className={cn(
-                    'absolute -right-3 top-20 z-40 w-6 h-6 rounded-full bg-white border border-slate-200',
-                    'flex items-center justify-center shadow-sm hover:bg-slate-50 transition-colors'
+                    'absolute -right-3 top-20 z-40 w-6 h-6 rounded-full',
+                    'flex items-center justify-center shadow-sm transition-colors'
                 )}
+                style={{
+                    background: 'var(--surface-card)',
+                    border: '1px solid var(--surface-border)',
+                    color: 'var(--text-secondary)',
+                }}
                 aria-label="Toggle sidebar"
             >
                 {collapsed ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
@@ -93,15 +104,15 @@ const Sidebar = () => {
 
             {/* ── User info ─────────────────────────────────── */}
             {!collapsed && (
-                <div className="px-4 py-4 border-b border-slate-100">
+                <div className="px-4 py-4" style={{ borderBottom: '1px solid var(--surface-border-light)' }}>
                     <div className="flex items-center gap-3">
                         <Avatar className="h-9 w-9 shrink-0">
                             <AvatarImage src={user?.student?.profilePhotoUrl} />
                             <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
                         </Avatar>
                         <div className="min-w-0">
-                            <p className="text-sm font-semibold text-slate-800 truncate">{displayName}</p>
-                            <p className="text-xs text-slate-400 truncate">{user?.email}</p>
+                            <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{displayName}</p>
+                            <p className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>{user?.email}</p>
                         </div>
                     </div>
                     <div className="mt-2">
@@ -133,8 +144,21 @@ const Sidebar = () => {
                 ))}
             </nav>
 
-            {/* ── Logout ────────────────────────────────────── */}
-            <div className="p-2 border-t border-slate-100 shrink-0">
+            {/* ── Bottom: Theme toggle + Logout ────────────── */}
+            <div className="p-2 shrink-0 space-y-0.5" style={{ borderTop: '1px solid var(--surface-border-light)' }}>
+                {/* Theme toggle */}
+                <button
+                    onClick={toggleTheme}
+                    className={cn(
+                        'sidebar-link w-full transition-colors'
+                    )}
+                    title={collapsed ? (theme === 'dark' ? 'Light mode' : 'Dark mode') : undefined}
+                >
+                    {theme === 'dark' ? <Sun size={18} className="shrink-0" /> : <Moon size={18} className="shrink-0" />}
+                    {!collapsed && <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>}
+                </button>
+
+                {/* Logout */}
                 <button
                     onClick={handleLogout}
                     className={cn(

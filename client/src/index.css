@@ -3,6 +3,8 @@
 
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ── CSS Custom Properties (Design Tokens) ───────────────── */
 @layer base {
   :root {
@@ -35,13 +37,40 @@
     --ring: 173 80% 36%;
 
     --radius: 0.75rem;
+
+    /* Theme-specific surface colors */
+    --surface-bg: #f8fafc;
+    --surface-card: #ffffff;
+    --surface-sidebar: #ffffff;
+    --surface-header: #ffffff;
+    --surface-border: #e2e8f0;
+    --surface-border-light: #f1f5f9;
+    --surface-hover: #f8fafc;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --text-heading: #1e293b;
+  }
+
+  .dark {
+    --surface-bg: #0f172a;
+    --surface-card: #1e293b;
+    --surface-sidebar: #1e293b;
+    --surface-header: #1e293b;
+    --surface-border: #334155;
+    --surface-border-light: #1e293b;
+    --surface-hover: #334155;
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --text-heading: #f8fafc;
   }
 }
 
 /* ── Global Resets & Base Styles ─────────────────────────── */
 @layer base {
   * {
-    border-color: hsl(var(--border));
+    border-color: var(--surface-border);
     box-sizing: border-box;
   }
 
@@ -51,23 +80,19 @@
   }
 
   body {
-    background-color: hsl(210 40% 98%);
-    color: hsl(var(--foreground));
+    background-color: var(--surface-bg);
+    color: var(--text-primary);
     font-size: 0.9375rem;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
+  h1, h2, h3, h4, h5, h6 {
     font-weight: 700;
     line-height: 1.2;
-    color: hsl(222 47% 11%);
+    color: var(--text-heading);
   }
 }
 
@@ -85,10 +110,11 @@
 
   /* Card styles */
   .card-base {
-    background: white;
+    background: var(--surface-card);
     border-radius: 1rem;
-    border: 1px solid hsl(214.3 31.8% 91.4%);
+    border: 1px solid var(--surface-border);
     box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.07), 0 1px 2px -1px rgb(0 0 0 / 0.07);
+    transition: background-color 0.2s ease, border-color 0.2s ease;
   }
 
   .card-hover {
@@ -107,7 +133,7 @@
     gap: 0.75rem;
     padding: 0.625rem 1rem;
     border-radius: 0.625rem;
-    color: hsl(215 16% 46%);
+    color: var(--text-secondary);
     font-weight: 500;
     font-size: 0.9rem;
     transition: background-color 0.15s, color 0.15s;
@@ -129,7 +155,7 @@
   /* Input focus ring */
   .input-ring {
     outline: none;
-    border: 1.5px solid hsl(214.3 31.8% 91.4%);
+    border: 1.5px solid var(--surface-border);
     transition: border-color 0.15s, box-shadow 0.15s;
   }
 
@@ -145,51 +171,24 @@
   }
 
   ::-webkit-scrollbar-track {
-    background: #f1f5f9;
+    background: var(--surface-bg);
   }
 
   ::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
+    background: var(--text-muted);
     border-radius: 999px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
+    background: var(--text-secondary);
   }
 }
 
 /* ── Status Badge Colors ─────────────────────────────────── */
-.badge-selected {
-  background: #d1fae5;
-  color: #065f46;
-}
-
-.badge-rejected {
-  background: #fee2e2;
-  color: #991b1b;
-}
-
-.badge-pending {
-  background: #fef9c3;
-  color: #713f12;
-}
-
-.badge-absent {
-  background: #f3f4f6;
-  color: #374151;
-}
-
-.badge-upcoming {
-  background: #eff6ff;
-  color: #1d4ed8;
-}
-
-.badge-active {
-  background: #ecfdf5;
-  color: #065f46;
-}
-
-.badge-completed {
-  background: #f3f4f6;
-  color: #374151;
-}
+.badge-selected { background: #d1fae5; color: #065f46; }
+.badge-rejected { background: #fee2e2; color: #991b1b; }
+.badge-pending  { background: #fef9c3; color: #713f12; }
+.badge-absent   { background: #f3f4f6; color: #374151; }
+.badge-upcoming { background: #eff6ff; color: #1d4ed8; }
+.badge-active   { background: #ecfdf5; color: #065f46; }
+.badge-completed { background: #f3f4f6; color: #374151; }

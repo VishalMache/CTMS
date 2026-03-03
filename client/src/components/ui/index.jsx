@@ -62,11 +62,12 @@ export const Input = React.forwardRef(({
         type={type}
         ref={ref}
         className={cn(
-            'flex h-10 w-full rounded-lg bg-white px-3 py-2 text-sm text-slate-800',
+            'flex h-10 w-full rounded-lg px-3 py-2 text-sm',
             'placeholder:text-slate-400 input-ring',
-            'disabled:cursor-not-allowed disabled:bg-slate-50 disabled:opacity-50',
+            'disabled:cursor-not-allowed disabled:opacity-50',
             className
         )}
+        style={{ background: 'var(--surface-card)', color: 'var(--text-primary)', ...props.style }}
         {...props}
     />
 ))
@@ -81,11 +82,12 @@ export const Select = React.forwardRef(({
     <select
         ref={ref}
         className={cn(
-            'flex h-10 w-full rounded-lg bg-white px-3 py-2 text-sm text-slate-800',
+            'flex h-10 w-full rounded-lg px-3 py-2 text-sm',
             'input-ring appearance-none',
-            'disabled:cursor-not-allowed disabled:bg-slate-50 disabled:opacity-50',
+            'disabled:cursor-not-allowed disabled:opacity-50',
             className
         )}
+        style={{ background: 'var(--surface-card)', color: 'var(--text-primary)', ...props.style }}
         {...props}
     >
         {children}
@@ -100,9 +102,10 @@ export const Label = React.forwardRef(({ className, ...props }, ref) => (
     <LabelPrimitive.Root
         ref={ref}
         className={cn(
-            'block text-sm font-medium text-slate-700 mb-1',
+            'block text-sm font-medium mb-1',
             className
         )}
+        style={{ color: 'var(--text-secondary)', ...props.style }}
         {...props}
     />
 ))
@@ -123,10 +126,10 @@ export const CardHeader = ({ className, children, ...props }) => (
     <div className={cn('px-6 pt-6 pb-3', className)} {...props}>{children}</div>
 )
 export const CardTitle = ({ className, children, ...props }) => (
-    <h3 className={cn('text-lg font-bold text-slate-800', className)} {...props}>{children}</h3>
+    <h3 className={cn('text-lg font-bold', className)} style={{ color: 'var(--text-heading)' }} {...props}>{children}</h3>
 )
 export const CardDescription = ({ className, children, ...props }) => (
-    <p className={cn('text-sm text-slate-500 mt-0.5', className)} {...props}>{children}</p>
+    <p className={cn('text-sm mt-0.5', className)} style={{ color: 'var(--text-muted)' }} {...props}>{children}</p>
 )
 export const CardContent = ({ className, children, ...props }) => (
     <div className={cn('px-6 pb-6', className)} {...props}>{children}</div>
@@ -259,10 +262,11 @@ export const Separator = React.forwardRef(({
         ref={ref}
         orientation={orientation}
         className={cn(
-            'shrink-0 bg-slate-200',
+            'shrink-0',
             orientation === 'horizontal' ? 'h-[1px] w-full' : 'h-full w-[1px]',
             className
         )}
+        style={{ background: 'var(--surface-border)' }}
         {...props}
     />
 ))
@@ -296,13 +300,14 @@ export const DialogContent = React.forwardRef(({ className, children, ...props }
             ref={ref}
             className={cn(
                 'fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2',
-                'w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200',
+                'w-full max-w-lg rounded-2xl shadow-2xl',
                 'p-6 focus:outline-none',
                 'data-[state=open]:animate-in data-[state=closed]:animate-out',
                 'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
                 'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
                 className
             )}
+            style={{ background: 'var(--surface-card)', border: '1px solid var(--surface-border)' }}
             {...props}
         >
             {children}
@@ -320,7 +325,8 @@ export const DialogHeader = ({ className, children, ...props }) => (
 export const DialogTitle = React.forwardRef(({ className, ...props }, ref) => (
     <DialogPrimitive.Title
         ref={ref}
-        className={cn('text-lg font-bold text-slate-900', className)}
+        className={cn('text-lg font-bold', className)}
+        style={{ color: 'var(--text-heading)' }}
         {...props}
     />
 ))

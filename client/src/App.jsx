@@ -6,6 +6,7 @@
 import React, { Suspense, lazy } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from '@/context/AuthContext'
+import { ThemeProvider } from '@/context/ThemeContext'
 import ProtectedRoute from '@/components/shared/ProtectedRoute'
 import { Spinner } from '@/components/ui'
 
@@ -40,55 +41,57 @@ const AdminProfile = lazy(() => import('@/pages/admin/AdminProfile'))
 
 // ── Page-level loading fallback ──────────────────────────────
 const PageLoader = () => (
-  <div className="min-h-screen flex items-center justify-center bg-slate-50">
+  <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--surface-bg)' }}>
     <Spinner size={32} />
   </div>
 )
 
 // ─────────────────────────────────────────────────────────────
 const App = () => (
-  <AuthProvider>
-    <Suspense fallback={<PageLoader />}>
-      <Routes>
-        {/* Public Auth Routes */}
-        <Route path="/login" element={<AuthLanding />} />
-        <Route path="/login/student" element={<StudentLogin />} />
-        <Route path="/login/admin" element={<AdminLogin />} />
-        <Route path="/register/student" element={<StudentRegister />} />
-        <Route path="/register/admin" element={<AdminRegister />} />
-        <Route path="/" element={<RootRedirect />} />
+  <ThemeProvider>
+    <AuthProvider>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          {/* Public Auth Routes */}
+          <Route path="/login" element={<AuthLanding />} />
+          <Route path="/login/student" element={<StudentLogin />} />
+          <Route path="/login/admin" element={<AdminLogin />} />
+          <Route path="/register/student" element={<StudentRegister />} />
+          <Route path="/register/admin" element={<AdminRegister />} />
+          <Route path="/" element={<RootRedirect />} />
 
-        {/* ── Student Routes ────────────────────────────── */}
-        <Route element={<ProtectedRoute requiredRole="STUDENT" />}>
-          <Route path="/student/dashboard" element={<StudentDashboard />} />
-          <Route path="/student/profile" element={<StudentProfile />} />
-          <Route path="/student/resume" element={<StudentResume />} />
-          <Route path="/student/companies" element={<CompaniesList />} />
-          <Route path="/student/applications" element={<StudentApplications />} />
-          <Route path="/student/training" element={<StudentTraining />} />
-          <Route path="/student/mock-tests" element={<StudentMockTests />} />
-          <Route path="/student/notifications" element={<StudentNotifs />} />
-        </Route>
+          {/* ── Student Routes ────────────────────────────── */}
+          <Route element={<ProtectedRoute requiredRole="STUDENT" />}>
+            <Route path="/student/dashboard" element={<StudentDashboard />} />
+            <Route path="/student/profile" element={<StudentProfile />} />
+            <Route path="/student/resume" element={<StudentResume />} />
+            <Route path="/student/companies" element={<CompaniesList />} />
+            <Route path="/student/applications" element={<StudentApplications />} />
+            <Route path="/student/training" element={<StudentTraining />} />
+            <Route path="/student/mock-tests" element={<StudentMockTests />} />
+            <Route path="/student/notifications" element={<StudentNotifs />} />
+          </Route>
 
-        {/* ── Admin Routes ─────────────────────────────── */}
-        <Route element={<ProtectedRoute requiredRole="TPO_ADMIN" />}>
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/students" element={<AdminStudents />} />
-          <Route path="/admin/students/:id" element={<AdminStudents />} />
-          <Route path="/admin/companies" element={<CompanyManagement />} />
-          <Route path="/admin/companies/:id/manage" element={<CompanyDriveManager />} />
-          <Route path="/admin/training" element={<AdminTraining />} />
-          <Route path="/admin/mock-tests" element={<AdminMockTests />} />
-          <Route path="/admin/reports" element={<AdminReports />} />
-          <Route path="/admin/notifications" element={<AdminNotifs />} />
-          <Route path="/admin/profile" element={<AdminProfile />} />
-        </Route>
+          {/* ── Admin Routes ─────────────────────────────── */}
+          <Route element={<ProtectedRoute requiredRole="TPO_ADMIN" />}>
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/students" element={<AdminStudents />} />
+            <Route path="/admin/students/:id" element={<AdminStudents />} />
+            <Route path="/admin/companies" element={<CompanyManagement />} />
+            <Route path="/admin/companies/:id/manage" element={<CompanyDriveManager />} />
+            <Route path="/admin/training" element={<AdminTraining />} />
+            <Route path="/admin/mock-tests" element={<AdminMockTests />} />
+            <Route path="/admin/reports" element={<AdminReports />} />
+            <Route path="/admin/notifications" element={<AdminNotifs />} />
+            <Route path="/admin/profile" element={<AdminProfile />} />
+          </Route>
 
-        {/* 404 – catch-all */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </Suspense>
-  </AuthProvider>
+          {/* 404 – catch-all */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Suspense>
+    </AuthProvider>
+  </ThemeProvider>
 )
 
 export default App
