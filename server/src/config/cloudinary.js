@@ -25,14 +25,26 @@ if (USE_CLOUDINARY) {
         api_secret: process.env.CLOUDINARY_API_SECRET,
     });
 
+    const getFormat = async (req, file) => file.originalname.split('.').pop().toLowerCase();
+
     const resumeStorage = new CloudinaryStorage({
         cloudinary,
-        params: { folder: 'cpms/resumes', resource_type: 'raw', allowed_formats: ['pdf', 'doc', 'docx'] },
+        params: {
+            folder: 'cpms/resumes',
+            resource_type: 'raw',
+            allowed_formats: ['pdf', 'doc', 'docx'],
+            public_id: (req, file) => file.originalname.split('.')[0] + '_' + Date.now() + '.' + file.originalname.split('.').pop()
+        },
     });
 
     const certificateStorage = new CloudinaryStorage({
         cloudinary,
-        params: { folder: 'cpms/certificates', resource_type: 'raw', allowed_formats: ['pdf', 'jpg', 'jpeg', 'png'] },
+        params: {
+            folder: 'cpms/certificates',
+            resource_type: 'raw',
+            allowed_formats: ['pdf', 'jpg', 'jpeg', 'png'],
+            public_id: (req, file) => file.originalname.split('.')[0] + '_' + Date.now() + '.' + file.originalname.split('.').pop()
+        },
     });
 
     const photoStorage = new CloudinaryStorage({
@@ -41,14 +53,22 @@ if (USE_CLOUDINARY) {
             folder: 'cpms/photos',
             resource_type: 'image',
             allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+            format: getFormat,
             transformation: [{ width: 400, height: 400, crop: 'fill' }],
         },
     });
 
     const noticeStorage = new CloudinaryStorage({
         cloudinary,
-        params: { folder: 'cpms/notices', resource_type: 'raw', allowed_formats: ['pdf'] },
+        params: {
+            folder: 'cpms/notices',
+            resource_type: 'raw',
+            allowed_formats: ['pdf'],
+            public_id: (req, file) => file.originalname.split('.')[0] + '_' + Date.now() + '.' + file.originalname.split('.').pop()
+        },
     });
+
+
 
     uploadResume = multer({ storage: resumeStorage });
     uploadCertificate = multer({ storage: certificateStorage });
