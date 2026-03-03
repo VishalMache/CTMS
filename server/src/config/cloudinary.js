@@ -31,9 +31,9 @@ if (USE_CLOUDINARY) {
         cloudinary,
         params: {
             folder: 'cpms/resumes',
-            resource_type: 'auto',
+            resource_type: 'raw',
             allowed_formats: ['pdf', 'doc', 'docx'],
-            public_id: (req, file) => file.originalname.split('.')[0] + '_' + Date.now() + '.' + file.originalname.split('.').pop()
+            public_id: (req, file) => file.originalname.split('.')[0] + '_' + Date.now()
         },
     });
 
@@ -41,9 +41,9 @@ if (USE_CLOUDINARY) {
         cloudinary,
         params: {
             folder: 'cpms/certificates',
-            resource_type: 'auto',
+            resource_type: 'raw',
             allowed_formats: ['pdf', 'jpg', 'jpeg', 'png'],
-            public_id: (req, file) => file.originalname.split('.')[0] + '_' + Date.now() + '.' + file.originalname.split('.').pop()
+            public_id: (req, file) => file.originalname.split('.')[0] + '_' + Date.now()
         },
     });
 
@@ -64,7 +64,7 @@ if (USE_CLOUDINARY) {
             folder: 'cpms/notices',
             resource_type: 'raw',
             allowed_formats: ['pdf'],
-            public_id: (req, file) => file.originalname.split('.')[0] + '_' + Date.now() + '.' + file.originalname.split('.').pop()
+            public_id: (req, file) => file.originalname.split('.')[0] + '_' + Date.now()
         },
     });
 
