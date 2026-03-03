@@ -16,7 +16,10 @@ const {
     deleteCompany,
     getAdminDashboardStats,
     getStudentApplications,
+    uploadNoticePdf,
 } = require('../controllers/companyController');
+
+const { uploadNotice } = require('../config/cloudinary');
 
 // ── All routes below require authentication ─────────────────
 router.use(protect);
@@ -37,5 +40,8 @@ router.get('/:id', getCompanyById);
 router.post('/', requireRole('TPO_ADMIN'), createCompany);
 router.patch('/:id', requireRole('TPO_ADMIN'), updateCompany);
 router.delete('/:id', requireRole('TPO_ADMIN'), deleteCompany);
+
+// Upload notice PDF for a company drive
+router.post('/:id/upload-notice', requireRole('TPO_ADMIN'), uploadNotice.single('noticePdf'), uploadNoticePdf);
 
 module.exports = router;

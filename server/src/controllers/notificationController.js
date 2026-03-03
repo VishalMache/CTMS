@@ -18,7 +18,7 @@ const broadcastSchema = z.object({
 // GET /api/notifications  (protected: Any authenticated user)
 // ────────────────────────────────────────────────────────────
 const getMyNotifications = async (req, res) => {
-    const userId = req.user.id;
+    const userId = req.user.userId;
 
     const notifications = await prisma.notification.findMany({
         where: { userId },
@@ -40,7 +40,7 @@ const getMyNotifications = async (req, res) => {
 // ────────────────────────────────────────────────────────────
 const markAsRead = async (req, res) => {
     const { id } = req.params;
-    const userId = req.user.id;
+    const userId = req.user.userId;
 
     // Verify ownership
     const notification = await prisma.notification.findUnique({ where: { id } });
@@ -65,7 +65,7 @@ const markAsRead = async (req, res) => {
 // PATCH /api/notifications/read-all  (protected: Any authenticated user)
 // ────────────────────────────────────────────────────────────
 const markAllAsRead = async (req, res) => {
-    const userId = req.user.id;
+    const userId = req.user.userId;
 
     await prisma.notification.updateMany({
         where: { userId, isRead: false },
@@ -114,7 +114,6 @@ const broadcastNotification = async (req, res) => {
         return res.status(404).json({ success: false, message: 'No active students found to broadcast to.' });
     }
 
-    // Prepare Bulk Insert
     const notificationData = targetUsers.map(u => ({
         userId: u.id,
         title,
@@ -122,6 +121,15 @@ const broadcastNotification = async (req, res) => {
         type,
         isRead: false
     }));
+
+    // Add exactly ONE copy for the admin so they can see it in their Broadcast History
+    notificationData.push({
+        userId: req.user.userId,
+        title: `[BROADCAST SET] ${title}`,
+        message,
+        type,
+        isRead: true // Already read by admin
+    });
 
     await prisma.notification.createMany({
         data: notificationData

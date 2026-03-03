@@ -6,6 +6,7 @@
 const prisma = require('../lib/prisma');
 const { z } = require('zod');
 const { sendEmail, buildEmailHtml } = require('../config/email');
+const { isCloudinary } = require('../config/cloudinary');
 
 // ── Zod: Create/Update Company Schema ────────────────────────
 const companySchema = z.object({
@@ -258,7 +259,21 @@ const getStudentApplications = async (req, res) => {
                         enrollmentNumber: true,
                         branch: true,
                         cgpa: true,
-                        user: { select: { email: true } }
+                        phone: true,
+                        tenth_percent: true,
+                        twelfth_percent: true,
+                        user: { select: { email: true } },
+                        roundResults: {
+                            select: {
+                                status: true,
+                                round: {
+                                    select: {
+                                        companyId: true,
+                                        roundNumber: true,
+                                    }
+                                }
+                            }
+                        }
                     }
                 },
                 company: {
@@ -268,6 +283,9 @@ const getStudentApplications = async (req, res) => {
                         jobRole: true,
                         ctc: true,
                         status: true,
+                        eligibilityCGPA: true,
+                        eligibilityPercent: true,
+                        allowedBranches: true,
                     }
                 }
             },
@@ -281,6 +299,40 @@ const getStudentApplications = async (req, res) => {
     }
 };
 
+// ────────────────────────────────────────────────────────────
+// POST /api/companies/:id/upload-notice  (protected: TPO_ADMIN)
+// Uploads a company requirements/details PDF
+// ────────────────────────────────────────────────────────────
+const uploadNoticePdf = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const existing = await prisma.company.findUnique({ where: { id } });
+        if (!existing) {
+            return res.status(404).json({ success: false, message: 'Company not found' });
+        }
+
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: 'No PDF file uploaded' });
+        }
+
+        // Cloudinary returns path/url in req.file.path, local disk also stores there
+        const fileUrl = isCloudinary
+            ? req.file.path
+            : `${req.protocol}://${req.get('host')}/uploads/notices/${req.file.filename}`;
+
+        const company = await prisma.company.update({
+            where: { id },
+            data: { noticePdfUrl: fileUrl },
+        });
+
+        return res.json({ success: true, message: 'Notice PDF uploaded', company });
+    } catch (error) {
+        console.error('Error uploading notice PDF:', error);
+        return res.status(500).json({ success: false, message: error.message || 'Server error' });
+    }
+};
+
 module.exports = {
     createCompany,
     getCompanies,
@@ -289,6 +341,7 @@ module.exports = {
     deleteCompany,
     getAdminDashboardStats,
     getStudentApplications,
+    uploadNoticePdf,
 };
 
 // ── Background Email Broadcast Helper ───────────────────────

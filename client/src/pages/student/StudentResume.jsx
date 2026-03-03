@@ -11,6 +11,7 @@ import DashboardLayout from '@/components/shared/DashboardLayout'
 import { Card, Button, Input, Label, Select, Badge, Spinner, Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui'
 import { useStudentProfile, useUploadResume } from '@/hooks/useStudentProfile'
 import { useCertificates, useAddCertificate, useDeleteCertificate } from '@/hooks/useStudentStats'
+import ResumeBuilder from '@/components/shared/ResumeBuilder'
 
 // ── Zod Schema ──────────────────────────────────────────────
 const certSchema = z.object({
@@ -214,6 +215,11 @@ const StudentResume = () => {
               </Button>
             </div>
           </Card>
+        </section>
+
+        {/* ── Resume Builder Section ── */}
+        <section>
+          <ResumeBuilder />
         </section>
 
         {/* ── Certificates Section ── */}

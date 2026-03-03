@@ -3,12 +3,13 @@
 // ============================================================
 
 import React, { useState } from 'react'
-import { Building2, MapPin, DollarSign, Calendar, GraduationCap, ArrowRight, CheckCircle2 } from 'lucide-react'
+import { Building2, MapPin, DollarSign, Calendar, GraduationCap, ArrowRight, CheckCircle2, FileText, Download } from 'lucide-react'
 import DashboardLayout from '@/components/shared/DashboardLayout'
 import { Card, Button, Badge, Spinner } from '@/components/ui'
 import { useCompanies } from '@/hooks/useCompany'
 import { useRegisterForDrive } from '@/hooks/useDrive'
 import { useStudentStats } from '@/hooks/useStudentStats'
+import { saveAs } from 'file-saver'
 
 const CompanyCard = ({ company, isApplying, onApply, appliedDrives }) => {
     // Check if student has already applied
@@ -52,6 +53,29 @@ const CompanyCard = ({ company, isApplying, onApply, appliedDrives }) => {
                 {company.description && (
                     <div className="mt-4 pt-4 border-t border-slate-100">
                         <p className="text-sm text-slate-500 line-clamp-2">{company.description}</p>
+                    </div>
+                )}
+
+                {company.noticePdfUrl && (
+                    <div className="mt-4 pt-4 border-t border-slate-100">
+                        <button
+                            onClick={async () => {
+                                try {
+                                    const response = await fetch(company.noticePdfUrl)
+                                    const blob = await response.blob()
+                                    saveAs(blob, `${company.name.replace(/\s+/g, '_')}_Requirements.pdf`)
+                                } catch (err) {
+                                    window.open(company.noticePdfUrl, '_blank')
+                                }
+                            }}
+                            className="inline-flex items-center gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors group/pdf cursor-pointer bg-transparent border-none p-0"
+                        >
+                            <div className="p-1.5 bg-indigo-50 rounded-md group-hover/pdf:bg-indigo-100 transition-colors">
+                                <FileText size={14} />
+                            </div>
+                            Download Requirements PDF
+                            <Download size={14} className="opacity-60" />
+                        </button>
                     </div>
                 )}
             </div>

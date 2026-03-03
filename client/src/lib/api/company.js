@@ -38,3 +38,12 @@ export const fetchStudentApplications = async () => {
     const res = await api.get('/companies/applications/all')
     return res.data
 }
+
+export const uploadNoticePdf = async ({ companyId, file }) => {
+    const formData = new FormData()
+    formData.append('noticePdf', file)
+    const res = await api.post(`/companies/${companyId}/upload-notice`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    return res.data.company
+}

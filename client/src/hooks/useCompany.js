@@ -75,3 +75,14 @@ export const useStudentApplications = () => {
         enabled: !!token,
     })
 }
+
+export const useUploadNoticePdf = () => {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: companyApi.uploadNoticePdf,
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['companies'] })
+            queryClient.invalidateQueries({ queryKey: ['company', variables.companyId] })
+        }
+    })
+}

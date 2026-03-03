@@ -64,7 +64,7 @@ if (USE_CLOUDINARY) {
             folder: 'cpms/notices',
             resource_type: 'raw',
             allowed_formats: ['pdf'],
-            public_id: (req, file) => file.originalname.split('.')[0] + '_' + Date.now()
+            public_id: (req, file) => file.originalname.split('.')[0] + '_' + Date.now() + '.pdf'
         },
     });
 
