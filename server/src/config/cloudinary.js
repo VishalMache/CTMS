@@ -31,7 +31,7 @@ if (USE_CLOUDINARY) {
         cloudinary,
         params: {
             folder: 'cpms/resumes',
-            resource_type: 'raw',
+            resource_type: 'auto',
             allowed_formats: ['pdf', 'doc', 'docx'],
             public_id: (req, file) => file.originalname.split('.')[0] + '_' + Date.now() + '.' + file.originalname.split('.').pop()
         },
@@ -41,7 +41,7 @@ if (USE_CLOUDINARY) {
         cloudinary,
         params: {
             folder: 'cpms/certificates',
-            resource_type: 'raw',
+            resource_type: 'auto',
             allowed_formats: ['pdf', 'jpg', 'jpeg', 'png'],
             public_id: (req, file) => file.originalname.split('.')[0] + '_' + Date.now() + '.' + file.originalname.split('.').pop()
         },
