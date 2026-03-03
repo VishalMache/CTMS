@@ -4,6 +4,7 @@
 
 const prisma = require('../lib/prisma');
 const { z } = require('zod');
+const { sendEmail, buildEmailHtml } = require('../config/email');
 
 // ── Validation Schemas ──────────────────────────────────────
 const sessionSchema = z.object({
@@ -193,7 +194,7 @@ const joinSession = async (req, res) => {
         const { id } = req.params;
         const studentRecord = await prisma.student.findUnique({
             where: { userId: req.user.userId },
-            select: { id: true }
+            include: { user: { select: { email: true } } }
         });
         if (!studentRecord) return res.status(404).json({ success: false, message: 'Student not found' });
 
@@ -223,6 +224,25 @@ const joinSession = async (req, res) => {
                 status: 'ABSENT' // Default before Admin marks as PRESENT
             }
         });
+
+        // Send Email
+        try {
+            const email = studentRecord.user.email;
+            const html = buildEmailHtml(
+                'Training Session Registration',
+                `<p>Hello ${studentRecord.firstName || 'Student'},</p>
+                 <p>You have successfully registered for the training session: <strong>${session.title}</strong>.</p>
+                 <p>Date: ${new Date(session.sessionDate).toLocaleString()}</p>
+                 <p>Regards,<br/>CPMS Placement Cell</p>`
+            );
+            sendEmail({
+                to: email,
+                subject: `Registration Confirmed: ${session.title}`,
+                html,
+            }).catch(console.error);
+        } catch (e) {
+            console.error('[Email] Error sending training registration email:', e);
+        }
 
         res.status(201).json({ success: true, attendance });
     } catch (error) {

@@ -7,6 +7,7 @@ const prisma = require('../lib/prisma');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { z } = require('zod');
+const { sendEmail, buildEmailHtml } = require('../config/email');
 
 // ── Zod validation schemas ──────────────────────────────────
 
@@ -114,6 +115,28 @@ const register = async (req, res) => {
 
     // 6. Generate token
     const token = generateToken(user.id, user.role);
+
+    // 7. Send Welcome Email
+    try {
+        const welcomeHtml = buildEmailHtml(
+            'Welcome to CPMS!',
+            `<p>Hello ${role === 'STUDENT' ? firstName : 'Admin'},</p>
+             <p>Your account has been successfully created on the College Placement Management System.</p>
+             <p>You can now log in using your registered email: <strong>${email}</strong>.</p>
+             <p>Best Regards,<br/>CPMS Placement Cell</p>`
+        );
+
+        // We don't await here to prevent blocking the response, or we can await it if we want to ensure it sends. 
+        // We'll fire and forget to keep API fast.
+        sendEmail({
+            to: email,
+            subject: 'Account Created Successfully - CPMS',
+            html: welcomeHtml,
+            text: `Hello,\nYour CPMS account has been created successfully.\nEmail: ${email}`
+        }).catch(err => console.error('[Email] Failed to send welcome email:', err));
+    } catch (err) {
+        console.error('[Email] Error building/sending email:', err);
+    }
 
     return res.status(201).json({
         success: true,

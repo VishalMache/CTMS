@@ -5,6 +5,7 @@
 
 const prisma = require('../lib/prisma');
 const { z } = require('zod');
+const { sendEmail, buildEmailHtml } = require('../config/email');
 
 // ── Zod: Create/Update Company Schema ────────────────────────
 const companySchema = z.object({
@@ -42,6 +43,12 @@ const createCompany = async (req, res) => {
         }
 
         const company = await prisma.company.create({ data });
+
+        // Send email to eligible students if drive is ACTIVE
+        if (company.status === 'ACTIVE') {
+            broadcastActiveDrive(company);
+        }
+
         return res.status(201).json({ success: true, message: 'Company created successfully', company });
     } catch (error) {
         console.error('Error creating company:', error);
@@ -117,6 +124,11 @@ const updateCompany = async (req, res) => {
         where: { id },
         data,
     });
+
+    // Send email to eligible students if this drive newly transitioned to ACTIVE
+    if (existing.status !== 'ACTIVE' && company.status === 'ACTIVE') {
+        broadcastActiveDrive(company);
+    }
 
     return res.json({ success: true, message: 'Company updated', company });
 };
@@ -277,4 +289,55 @@ module.exports = {
     deleteCompany,
     getAdminDashboardStats,
     getStudentApplications,
+};
+
+// ── Background Email Broadcast Helper ───────────────────────
+const broadcastActiveDrive = async (company) => {
+    try {
+        const branches = Array.isArray(company.allowedBranches)
+            ? company.allowedBranches.map(b => b.toUpperCase())
+            : company.allowedBranches.split(',').map(b => b.trim().toUpperCase());
+
+        // 1. Fetch potentially eligible students
+        const students = await prisma.student.findMany({
+            where: {
+                cgpa: { gte: company.eligibilityCGPA },
+                tenth_percent: { gte: company.eligibilityPercent },
+                twelfth_percent: { gte: company.eligibilityPercent },
+                activeBacklogs: false
+            },
+            include: { user: { select: { email: true } } }
+        });
+
+        // 2. Local filter for branches as SQLite struggles with string array queries
+        const eligible = students.filter(s => branches.includes(s.branch.toUpperCase()));
+
+        if (eligible.length > 0) {
+            const emailHtml = buildEmailHtml(
+                `New Placement Drive: ${company.name}`,
+                `<p>Hello,</p>
+                 <p>A new placement drive for <strong>${company.name}</strong> (${company.jobRole}) is now <strong>ACTIVE</strong>.</p>
+                 <br/>
+                 <p><strong>Package (CTC):</strong> ${company.ctc} LPA</p>
+                 <p><strong>Drive Date:</strong> ${new Date(company.driveDate).toLocaleDateString()}</p>
+                 <br/>
+                 <p>You meet the eligibility criteria. Please log in to the CPMS portal to register.</p>
+                 <p>Regards,<br/>CPMS Placement Cell</p>`
+            );
+
+            // 3. Send individually to avoid exposing all emails in "To:"
+            console.log(`[Email] Broadcasting ${company.name} to ${eligible.length} students.`);
+            for (const s of eligible) {
+                if (s.user?.email) {
+                    sendEmail({
+                        to: s.user.email,
+                        subject: `New Active Drive: ${company.name}`,
+                        html: emailHtml
+                    }).catch(err => console.error('[Email] Drop error:', err));
+                }
+            }
+        }
+    } catch (e) {
+        console.error('[Email] Error broadcasting drive:', e);
+    }
 };

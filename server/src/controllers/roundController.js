@@ -5,6 +5,7 @@
 
 const prisma = require('../lib/prisma');
 const { z } = require('zod');
+const { sendEmail, buildEmailHtml } = require('../config/email');
 
 // ── Validation helpers (Zod v4 compatible) ──────────────────
 const validateCreateRound = (body) => {
@@ -226,6 +227,36 @@ const updateStudentStatus = async (req, res) => {
                 await prisma.roundResult.deleteMany({
                     where: { roundId: nextRound.id, studentId, status: 'PENDING' }
                 });
+            }
+        }
+
+        // ── Send Email Notification ──
+        if (status === 'SELECTED' || status === 'REJECTED') {
+            try {
+                const student = await prisma.student.findUnique({
+                    where: { id: studentId },
+                    include: { user: { select: { email: true } } }
+                });
+
+                if (student?.user?.email) {
+                    const statusLabel = status === 'SELECTED' ? 'Shortlisted / Selected' : 'Not Selected';
+                    const roundName = round.name || `Round ${round.roundNumber}`;
+                    const emailHtml = buildEmailHtml(
+                        `Application Update for ${roundName}`,
+                        `<p>Hello ${student.firstName || 'Student'},</p>
+                         <p>Your status for <strong>${roundName}</strong> has been updated to <strong>${statusLabel}</strong>.</p>
+                         ${feedback ? `<p><strong>Feedback:</strong> ${feedback}</p>` : ''}
+                         <p>Regards,<br/>CPMS Placement Cell</p>`
+                    );
+
+                    sendEmail({
+                        to: student.user.email,
+                        subject: `Application Update: ${statusLabel}`,
+                        html: emailHtml
+                    }).catch(console.error);
+                }
+            } catch (e) {
+                console.error('[Email] Error sending round result email:', e);
             }
         }
 
