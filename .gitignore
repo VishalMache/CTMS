@@ -1,0 +1,41 @@
+# ─────────────────────────────────────────────
+# CTMS – Root .gitignore
+# ─────────────────────────────────────────────
+
+# Dependencies
+node_modules/
+
+# Environment files (contain secrets)
+.env
+.env.local
+.env.*.local
+
+# Build output
+dist/
+dist-ssr/
+build/
+
+# Uploads (user-generated content)
+uploads/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Test files
+*.test.js
+test_*.js
+
+# SQLite dev database
+*.db
